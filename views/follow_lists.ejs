@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="/nav_bar.css">
+	<link rel="stylesheet" type="text/css" href="/default_style.css">
+	<script
+		src="https://code.jquery.com/jquery-3.6.1.min.js"
+		integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+		crossorigin="anonymous"></script>
+
+  	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<title><%= user_follow.user %>&nbsp;-&nbsp;Followers/Following</title>
+</head>
+<body>
+	<div id="nav-bar">
+		<div id= "top-left">
+			<div id="logo-container"><a href="/"><img src='/basketball.jpeg' id='logo' width=100% height=auto></a></div>
+			<span id="users-tab"><a href="/users">Users</a></span>
+			<span id="stats-tab"><a href="/stats">Stats</a></span>
+			<span id="charts-tab"><a href="/charts">Charts</a></span>
+		</div>
+		<div id="middle"></div>
+		<div id= "top-right">
+			<% if (user_info) { %>
+			<span id= "logout"><a href="/logout">Logout</a></span>
+			<span id= "logged-in-username"><a href=<%= "/users/" + user_info.id %>><%= user_info.username %></a></span>
+			<% } else { %>
+			<span id= "sign-in"><a href="/login">Login</a></span>
+			<% } %>
+			<span id='create-take'><a href="/users/createtake">Create Take</a></span>
+
+			<div class="user-search-cards">
+				<div class="search-wrapper">
+					<i class="fa fa-search"></i>
+					<input type="search" id="search" placeholder="Search Users" data-search>
+				</div>
+				<div class="user-cards" id="user-cards-div" data-user-cards-container>
+					<template data-user-template>
+						<a>
+						<div class="card" data-card>
+							<div class="username" data-username></div>
+						</div>
+						</a>
+					</template>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<% let following = user_follow.following %>
+	<% for (i = 0; i < following.length; i++) { %>
+		<div><%= following[i].username %></div>
+	<%	} %>
+
+	<script type="text/javascript" src="/search_bar.js"></script>
+</body>
+</html>

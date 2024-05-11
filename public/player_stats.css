@@ -1,0 +1,320 @@
+div#name {
+	width: 30%;
+	margin: 0 auto;
+	text-align: center;
+	font-size: 30px;
+	margin-bottom: 3px;
+	z-index: 3;
+}
+
+div#team {
+	width: 30%;
+	margin: 0 auto;
+	text-align: center;
+	font-size: 20px;
+	color: #add9f0;
+	font-style: italic;
+}
+
+div#top-line {
+	display: flex;
+	/*margin-top: -40px;*/
+}
+
+div#stats, div#pcts-div {
+	display: flex;
+	margin-left: 10%;
+}
+
+div#pcts-div {
+	margin-left: 5%;
+	/*transform: translateY(80px);*/
+}
+
+div#ppg-div {
+	width: 150px;
+	height: 150px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: 2px solid #04d9ff;
+	border-radius: 50%;
+}
+
+span#ppg {
+	font-size: 45px;
+}
+
+div#apg-div, div#rpg-div {
+	width: 100px;
+	height: 100px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: 2px solid #04d9ff;
+	border-radius: 50%;
+	margin-left: 20px;
+	transform: translateY(50px);
+}
+
+div#ts-div {
+	width: 100px;
+	height: 100px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: 2px solid #44D62C;
+	border-radius: 50%;
+	margin-left: 20px;
+	transform: translateY(50px);
+}
+
+span#apg, span#rpg, span#ts {
+	font-size: 30px;
+}
+
+div#fgpct-div, div#tpct-div, div#ftpct-div, div#efg-div {
+	width: 70px;
+	height: 70px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: 2px solid #fc6e35;
+	border-radius: 50%;
+	margin-left: 20px;
+	transform: translateY(80px);
+}
+
+span#fgpct, span#tpct, span#ftpct, span#efg, span#on-off-net, span#win-diff {
+	font-size: 15px;
+}
+
+div#impact {
+	width: 60%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 20px;
+}
+
+div#all-net, div#all-wins {
+	width: 100%;
+	height: 70px;
+	/*display: flex;
+	justify-content: center;
+	align-items: center;*/
+	text-align:center;
+	border: 2px solid #C0C0C0;
+	border-radius: 5px;
+	margin: 10px;
+}
+
+div#all-net div#net-div, div#win-pct-div {
+	margin-top: 5px;
+}
+
+div#net-explan-div, div#wins-explan-div {
+	/*
+	width: 100%;
+	height: 30px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin: 10px;
+	*/
+	display: flex;
+	justify-content: center;
+	color: aliceblue;
+	font-size: 14px;
+}
+
+div#net-explan-div div#net-off-div, div#net-on-div, div#swing-div {
+	margin: 5px;
+}
+
+div#wins-explan-div div#wins-on-div, div#wins-off-div, div#diff-div {
+	margin-left: 15px;
+	margin-right: 15px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+#overall-stats table#overall-stats-table {
+	width: 85%;
+	margin: 0 auto;
+	border-collapse: collapse;
+}
+
+table#overall-stats-table tr#first-row td {
+	/*border-bottom: 1px solid #44D62C;*/
+	border-bottom: 1px solid #04d9ff;
+}
+
+div#basic-charts {
+	display: flex;
+	justify-content: space-around;
+	width: 90%;
+	margin: 0 auto;
+	/*overflow-x: scroll;*/
+}
+
+div#statProgressionChart, div#statBarChart {
+	margin: 10px;
+}
+
+div#statBarChart {
+	overflow-x: scroll;
+	overflow-y: hidden;
+}
+
+hr {
+	border: 1px solid grey;
+}
+
+#ppg-div:hover {
+	transform: scale(1.1);
+	cursor: pointer;
+}
+
+#ts-div:hover, #apg-div:hover, #rpg-div:hover {
+	transform: translateY(50px) scale(1.1);
+	cursor: pointer;
+}
+
+#fgpct-div:hover, #tpct-div:hover, #ftpct-div:hover, #efg-div:hover {
+	transform: translateY(80px) scale(1.1);
+	cursor: pointer;
+}
+
+table#overall-stats-table th:hover {
+	cursor: default;
+}
+
+#net-div:hover {
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+table#game-logs-table {
+	border-collapse: collapse;
+	width: 80%;
+	margin: 0 auto;
+}
+
+
+
+#game-logs-table_length {
+	display: none;
+}
+
+.hide {
+	display: none;
+}
+
+div#player-search-div, div#team-search-div {
+	display: flex;
+	flex-direction: row-reverse;
+}
+
+input#player-search, input#team-search {
+	height: 20px;
+	width: 200px;
+	/*float: right;*/
+	margin-right: 10%;
+	background-color: black;
+	color: grey;
+	border: 1px solid aliceblue;
+	border-radius: 5px;
+	outline: none;
+	z-index: 1;
+}
+
+input#team-search {
+	margin-top: 10px;
+}
+
+.player-cards, .team-cards {
+	width: 200px;
+	height: 300px;
+	overflow-y: scroll;
+	position: absolute;
+	border: none;
+	background-color: black;
+	text-align: center;
+}
+
+.player-cards {
+	z-index: 2;
+}
+
+.team-cards {
+	z-index: 1;
+}
+
+html {
+  --scrollbarBG: #395061;
+  --thumbBG: #90A4AE;
+}
+.player-cards::-webkit-scrollbar, .team-cards::-webkit-scrollbar {
+  width: 11px;
+}
+.player-cards, .team-cards {
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+}
+.player-cards::-webkit-scrollbar-track, .team-cards::-webkit-scrollbar-track {
+  background: var(--scrollbarBG);
+}
+.player-cards::-webkit-scrollbar-thumb, .team-cards::-webkit-scrollbar-thumb {
+  background-color: var(--thumbBG) ;
+  border-radius: 6px;
+  border: 3px solid var(--scrollbarBG);
+}
+
+.player-card:hover, .team-card:hover {
+	background-color: #34c3eb;
+	color: aliceblue;
+	cursor: pointer;
+}
+
+div#player-block, div#team-block {
+	display: flex;
+	flex-direction: row-reverse;
+	margin-right: 10%;
+}
+
+div#searches {
+	margin-top: -55px;
+}
+
+div#takes {
+	width: 90%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 10px;
+	display: flex;
+	justify-content: space-around;
+	font-size: 15px;
+}
+
+div#takes span.curr-odds {
+	color: #04d9ff;
+}
+
+div#takes span.curr-odds:hover {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+@media only screen and (max-width: 600px) {
+	#basic-charts {
+		overflow-x: scroll;
+	}
+
+	#top-line {
+		overflow-x: scroll;
+	}
+}
+
+
+
+

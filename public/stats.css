@@ -1,0 +1,140 @@
+.positive {
+	color: #44D62C;
+}
+
+.grey {
+	color: grey;
+}
+
+.charcoal {
+	color: #3b372b;
+}
+
+.negative {
+	color: #D22730;
+}
+
+table#stats-table {
+	border-collapse: collapse;
+	width: 80%;
+	margin: 0 auto;
+}
+
+table#east-standings-table, table#team-stats-table {
+	border-collapse: collapse;
+	width: 85%;
+	margin: 0 auto;
+}
+
+div#team-stats-table_wrapper, div#standings-tables {
+	display: none;
+}
+
+th:hover {
+	cursor: pointer;
+}
+
+tbody tr:hover {
+	background-color: #395061;
+}
+
+td {
+	border: 1px solid #3b372b;
+	text-align: center;
+}
+
+table th.players-name-col {
+	width: 190px;
+}
+
+a#player-link, a#team-link {
+	color: #add9f0;
+	/*text-decoration: underline;*/
+	font-size: 15px;
+}
+
+a.player-link, a.team-link {
+	color: #add9f0;
+	/*text-decoration: underline;*/
+	font-size: 15px;
+}
+
+a#box-link {
+	color: #add9f0;
+	font-size: 15px;
+	text-decoration: underline;
+}
+
+.highlight {
+	border-bottom: 1px solid #cffafa;
+}
+
+#general-info {
+	width: 40%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: -30px;
+	/*margin: 0 auto;*/
+	display: flex;
+	justify-content: space-around;
+}
+
+#general-info span {
+	margin-left: 5px;
+	margin-right: 5px;
+	color: aliceblue;
+}
+
+div#tabs {
+	width: 60%;
+	display: flex;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 40px;
+	justify-content: space-between;
+	height: 25px;
+}
+
+div#players-stats-tab, div#teams-stats-tab, div#standings-tab {
+	width: 33.3%;
+	text-align: center;
+}
+
+div#players-stats-tab:hover, div#teams-stats-tab:hover, div#standings-tab:hover {
+	cursor: pointer;
+	border-bottom: 2px solid #4287f5;
+}
+
+.tab-select {
+	border-bottom: 2px solid #4287f5;
+}
+
+.td-highlight {
+	/*background-color: #35424d;*/
+	background-color: #2a3138;
+}
+
+@media only screen and (max-width: 600px) {
+	table#stats-table {
+		width: 100%;
+	}
+	div.col-sm-12 {
+		width: 100%;
+		overflow-x: scroll;
+	}
+
+	div#tabs {
+		width: 80%;
+	}
+
+	#general-info {
+		margin-bottom: 0;
+	}
+
+	.col-md-6 input {
+		width: 105px;
+	}
+
+}
+
+

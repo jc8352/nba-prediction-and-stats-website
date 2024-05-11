@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		body {
+		    background-color: black;
+		}
+		* {
+		    box-sizing: border-box;
+		}
+		.container {
+		    max-width: 500px;
+		    margin: 60px auto;
+		    border-radius: 5px;
+		    border: 2px solid #44D62C;
+		    color: black;
+		}
+		.container #form h1 {
+		    text-align: center;
+		    color: green;
+		    margin: 0px;
+		}
+		form {
+		    background-color: black;
+		    padding: 30px;
+		}
+		form .input {
+		    margin-bottom: 15px;
+		}
+		form label {
+		    display: block;
+		    margin-bottom: 10px;
+		    color: aliceblue;
+		}
+		form input {
+		    padding: 12px 12px;
+		    width: 100%;
+		    border: 1px solid #ccc;
+		    background-color: black;
+		    color: aliceblue;
+		    border-radius: 2px;
+		}
+		.signup-btn {
+		    width: 100%;
+		    border: none;
+		    background-color: #3471eb;
+		    font-size: 18px;
+		    color: aliceblue;
+		    border-radius: 3px;
+		    padding: 20px;
+		    text-align: center;
+		    cursor: pointer;
+		}
+
+		#user-taken {
+			color: red;
+			font-size: 12px;
+			margin-bottom: 5px;
+			margin-top: -10px;
+		}
+
+
+	</style>
+	<title>NBA Take Tracker</title>
+</head>
+<body>
+    <div class="container">
+        <form id='signup-form' onSubmit="return validateForm()">
+        	<div class="input">
+                <label for='email'>Email (for password recovery)</label>
+                <input type='email' name='name' id='email' placeholder='Email' maxlength='40' required autofocus>
+            </div>
+            <div class="input">
+                <label for='username'>Username (case sensitive)</label>
+                <input name='name' id='username' placeholder='Username' maxlength='20' required>
+            </div>
+            <div class="input">
+                <label for='password'>Password</label>
+                <input name= 'password' id='password' type="text" placeholder="Password" minlength='8' maxlength='20' required>
+            </div>
+            <div class="input">
+            	<label for='pass-confirm'>Confirm password</label>
+            	<input type="text" name="pass-confirm" id='pass-confirm', placeholder="Password" minlength='8' maxlength='20' required>
+            </div>
+            <div id="user-taken"></div>
+            <button class="signup-btn" type="submit">Signup</button>
+        </form>
+    </div>
+
+    <script>
+		const form = document.getElementById("signup-form");
+
+		form.addEventListener("submit", submitForm);
+
+		function validateForm() {
+			if (document.forms["signup-form"]["password"].value != document.forms["signup-form"]["pass-confirm"].value) {
+				document.getElementById("user-taken").innerHTML = "*passwords don't match";
+				return false;
+			}
+			return true;
+		}
+
+		function submitForm(e) {
+			if (document.forms["signup-form"]["password"].value != document.forms["signup-form"]["pass-confirm"].value) {return;}
+		    e.preventDefault();
+		    const email = document.getElementById("email");
+		    const username = document.getElementById("username");
+		    const password = document.getElementById("password");
+		    const formData = new FormData();
+		 
+		 	formData.append("email", email.value);
+		    formData.append("username", username.value);
+		    formData.append("password", password.value);
+		    fetch("/api/createAccount", {
+		        method: 'POST',
+		        body: formData
+		        
+		    })
+		       .then(function(res) { return res.text();
+		       }).then(function(data) {
+		       		if (data == "username already taken") {
+		       			document.getElementById("user-taken").innerHTML = "*username already taken";
+		       		}
+		       		else {
+		       			window.location.href='/';
+		       		}
+		       })
+		       					
+		       .catch((err) => ("Error occured", err));
+		}
+	</script>
+
+</body>
+</html>
+
+
+
+

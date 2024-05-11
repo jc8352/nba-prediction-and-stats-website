@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="/stats.css">
+	<link rel="stylesheet" type="text/css" href="/nav_bar.css">
+	<link rel="stylesheet" type="text/css" href="/default_style.css">
+	<link rel="stylesheet" type="text/css" href="/player_stats.css">
+	<link rel="stylesheet" type="text/css" href="/team_stats.css">
+	<link rel="stylesheet" type="text/css" href="/bootstrap-table-style.css">
+	<script
+  		src="https://code.jquery.com/jquery-3.6.1.min.js"
+  		integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+  		crossorigin="anonymous"></script>
+  	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  	<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4083353808185208"
+     crossorigin="anonymous"></script>
+	<title><%= team.name %>&nbsp;Stats</title>
+</head>
+<body>
+	<div id="nav-bar">
+		<div id= "top-left">
+			<div id="logo-container"><a href="/"><img src='/basketball.jpeg' id='logo' width=100% height=auto></a></div>
+			<span id="users-tab"><a href="/users">Users</a></span>
+			<span id="stats-tab"><a href="/stats">Stats</a></span>
+			<span id="charts-tab"><a href="/charts">Charts</a></span>
+		</div>
+		<div id="middle"></div>
+		<div id= "top-right">
+			<% if (user) { %>
+			<span id= "logout"><a href="/logout">Logout</a></span>
+			<span id= "logged-in-username"><a href=<%= "/users/" + user.id %>><%= user.username %></a></span>
+			<% } else { %>
+			<span id= "sign-in"><a href="/login">Login</a></span>
+			<% } %>
+			<span id='create-take'><a href="/users/createtake">Create Take</a></span>
+			
+			<div class="user-search-cards">
+				<div class="search-wrapper">
+					<i class="fa fa-search"></i>
+					<input type="search" id="search" placeholder="Search Users" data-search>
+				</div>
+				<div class="user-cards" id="user-cards-div" data-user-cards-container>
+					<template data-user-template>
+						<a>
+						<div class="card" data-card>
+							<div class="username" data-username></div>
+						</div>
+						</a>
+					</template>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="name"><%= team.name %></div>
+
+	<div id="searches-2">
+
+		<div id="player-search-div">
+			<input name="player-search" id="player-search" player-data-search required placeholder="Search for a player">
+		</div>
+
+		<div id="player-block">
+			<div class="player-cards hide" id="player-cards-div" data-player-container>
+				<template data-player-template>
+					<div class="player-card" player-data-card>
+						<div class="player" data-player></div>
+					</div>
+				</template>
+			</div>
+		</div>
+
+		<div id="team-search-div">
+			<input name="team-search" id="team-search" team-data-search required placeholder="Search for another team">
+		</div>
+
+		<div id="team-block">
+			<div class="team-cards hide" id="team-cards-div" data-team-container>
+				<template data-team-template>
+					<div class="team-card" team-data-card>
+						<div class="team" data-team></div>
+					</div>
+				</template>
+			</div>
+		</div>
+
+	</div>
+
+	<div id="top-line-stats">
+		<div id="stats">
+			<div id="record-div"><span id="record"><%= team.total_wins %>-<%= team.games_played-team.total_wins %></span>&nbsp;W/L</div>
+			<% let pt_diff = (team.total_point_differential/team.games_played) %>
+			<% let pt_diff_class = pt_diff>0 ? "positive":(pt_diff==0) ? "grey":"negative"%>
+			<% pt_diff = pt_diff>0 ? ("+"+pt_diff.toFixed(1)):pt_diff.toFixed(1) %>
+			<div id="ptdiff-div"><span id="ptdiff" class=<%= pt_diff_class %>><%= pt_diff %></span>&nbsp;diff</div>
+			<div id="team-ppg-div"><span id="team-ppg"><%= (team.total_points/team.games_played).toFixed(1) %></span>&nbsp;ppg</div>
+			<div id="ts-div"><span id="ts"><%= ((team.total_fgm+.5*team.total_3sM+.5*team.total_ftm)/(team.total_fga+.44*team.total_fta)*100).toFixed(1) %></span>&nbsp;ts%</div>
+		</div>
+
+		<div id="pcts-div">
+			<div id="fgpct-div"><span id="fgpct"><%= (team.total_fgm/team.total_fga*100).toFixed(1) %></span>&nbsp;fg%</div>
+			<div id="tpct-div"><span id="tpct"><%= (team.total_3sM/team.total_3sA*100).toFixed(1) %></span>&nbsp;3p%</div>
+			<div id="ftpct-div"><span id="ftpct"><%= (team.total_ftm/team.total_fta*100).toFixed(1) %></span>&nbsp;ft%</div>
+			<div id="efg-div"><span id="efg"><%= ((team.total_fgm+.5*team.total_3sM)/(team.total_fga)*100).toFixed(1) %></span>&nbsp;efg%</div>
+		</div>
+	</div>
+
+	<div id="takes">
+		<div id="team-odds"></div>
+		<div id="team-odds-2"></div>
+	</div>
+
+	<% function getOnOff(player, team) {
+		const GAME_LENGTH = 48;
+		//console.log(player.name);
+		let total_off_court = team.total_point_differential-player.total_plus_minus;
+		let total_mins_off = (team.games_played*GAME_LENGTH+team.total_ots*5)-player.total_mins;
+		//console.log("off court: " + total_off_court);
+		//console.log("mins off: " + total_mins_off);
+
+		let per48_off = total_off_court*(GAME_LENGTH/total_mins_off);
+		let per48_on = player.total_plus_minus*(GAME_LENGTH/player.total_mins);
+
+		//console.log("per48_off: " + per48_off);
+		//console.log("per48_on: " + per48_on);
+		return (per48_on-per48_off);
+
+	} %>
+
+	<div id="team-charts">
+		<div id="statProgressionChart" style="width: 48%; height: 450px"></div>
+		<div id="teamBarChart" style="width: 48%; height: 450px"></div>
+	</div>
+
+	<div id="basic-charts">
+		<!--<div id="statProgressionChart" style="width: 600px; height: 450px"></div>-->
+		<div id="statBarChart" style="width: 800px; height: 450px"></div>
+	</div>
+
+	<div id="players">
+		<table id="players-table">
+			<thead>
+				<th>Player</th>
+				<th id="gp-col">GP</th>
+				<th id="mpg-col">Mins</th>
+				<th id="ppg-col" class="highlight">Pts</th>
+				<th id="apg-col">Asts</th>
+				<th id="rpg-col">Reb</th>
+				<th id="fgm-col">FGM</th>
+				<th id="fga-col">FGA</th>
+				<th id="fg-pct-col">FG%</th>
+				<th id="tpm-col">3PM</th>
+				<th id="tpa-col">3PA</th>
+				<th id="tp-pct-col">3P%</th>
+				<th id="ftm-col">FTM</th>
+				<th id="fta-col">FTA</th>
+				<th id="ft-pct-col">FT%</th>
+				<th id="TOs-col">TO</th>
+				<th id="pm-col">+/-</th>
+				<th id="on-off-col">On/Off</th>
+				<th id="win-pct-col">Win%</th>
+				<th id="techs-col">Techs</th>
+			</thead>
+			<tbody>
+				<% players.forEach(function(player) { %>
+					<tr>
+						<td><a id="player-link" href=<%= "/stats/players/"+player._id %>><%= player.name %></a></td>
+						<td><%= player.games_played %></td>
+						<td><%= (player.total_mins/player.games_played).toFixed(1) %></td>
+						<td><%= (player.total_points/player.games_played).toFixed(1) %></td>
+						<td><%= (player.total_assists/player.games_played).toFixed(1) %></td>
+						<td><%= (player.total_rebounds/player.games_played).toFixed(1) %></td>
+						<td><%= (player.total_fgm/player.games_played).toFixed(1) %></td>
+						<td><%= (player.total_fga/player.games_played).toFixed(1) %></td>
+						<td><%= (player.total_fgm/player.total_fga*100).toFixed(1) %></td>
+						<td><%= (player.total_3sM/player.games_played).toFixed(1) %></td>
+						<td><%= (player.total_3sA/player.games_played).toFixed(1) %></td>
+						<td><%= (player.total_3sM/player.total_3sA*100).toFixed(1) %></td>
+						<td><%= (player.total_ftm/player.games_played).toFixed(1) %></td>
+						<td><%= (player.total_fta/player.games_played).toFixed(1) %></td>
+						<td><%= (player.total_ftm/player.total_fta*100).toFixed(1) %></td>
+						<td><%= (player.total_TOs/player.games_played).toFixed(1) %></td>
+						<% let plus_minus = player.total_plus_minus/player.games_played %>
+						<% let pm_class = plus_minus>0 ? "positive":(plus_minus==0) ? "grey":"negative" %>
+						<% plus_minus = plus_minus>0 ? ("+"+plus_minus.toFixed(1)):plus_minus.toFixed(1) %>
+						<td class=<%= pm_class %>><%= plus_minus %></td>
+						<% let on_off = getOnOff(player, team) %>
+						<% let on_off_class = on_off>0 ? "positive":(on_off==0) ? "grey":"negative" %>
+						<% on_off = on_off>0 ? ("+"+on_off.toFixed(1)):on_off.toFixed(1) %>
+						<td class=<%= on_off_class %>><%= on_off %></td>
+						<% let win_pct = player.total_wins/player.games_played %>
+						<% let win_pct_class = win_pct>.5 ? "positive":(win_pct==.5) ? "grey": "negative" %>
+						<% win_pct = win_pct!=1 ? (player.total_wins/player.games_played).toFixed(3).slice(1):(player.total_wins/player.games_played).toFixed(3) %>
+						<td class=<%= win_pct_class %>><%= win_pct %></td>
+						<td><%= (player.total_techs/player.games_played).toFixed(1) %></td>
+					</tr>
+				<% }) %>
+			</tbody>
+			<tr id="avg-row">
+				<td id="team-avg">Team</td>
+				<td><%= team.games_played %></td>
+				<td><%= ((team.games_played*48+team.total_ots*5)/team.games_played).toFixed(1) %></td>
+				<td><%= (team.total_points/team.games_played).toFixed(1) %></td>
+				<td><%= (team.total_assists/team.games_played).toFixed(1) %></td>
+				<td><%= (team.total_rebounds/team.games_played).toFixed(1) %></td>
+				<td><%= (team.total_fgm/team.games_played).toFixed(1) %></td>
+				<td><%= (team.total_fga/team.games_played).toFixed(1) %></td>
+				<td><%= (team.total_fgm/team.total_fga*100).toFixed(1) %></td>
+				<td><%= (team.total_3sM/team.games_played).toFixed(1) %></td>
+				<td><%= (team.total_3sA/team.games_played).toFixed(1) %></td>
+				<td><%= (team.total_3sM/team.total_3sA*100).toFixed(1) %></td>
+				<td><%= (team.total_ftm/team.games_played).toFixed(1) %></td>
+				<td><%= (team.total_fta/team.games_played).toFixed(1) %></td>
+				<td><%= (team.total_ftm/team.total_fta*100).toFixed(1) %></td>
+				<td><%= (team.total_TOs/team.games_played).toFixed(1) %></td>
+				<% let plus_minus = team.total_point_differential/team.games_played %>
+				<% let pm_class = plus_minus>0 ? "positive":(plus_minus==0) ? "grey":"negative" %>
+				<% plus_minus = plus_minus>0 ? ("+"+plus_minus.toFixed(1)):plus_minus.toFixed(1) %>
+				<td class=<%= pm_class %>><%= plus_minus %></td>
+				<% let on_off = 0 %>
+				<% let on_off_class = on_off>0 ? "positive":(on_off==0) ? "grey":"negative" %>
+				<% on_off = on_off>0 ? ("+"+on_off.toFixed(1)):on_off.toFixed(1) %>
+				<td class=<%= on_off_class %>><%= on_off %></td>
+				<% let win_pct = team.total_wins/team.games_played %>
+				<% let win_pct_class = win_pct>.5 ? "positive":(win_pct==.5) ? "grey": "negative" %>
+				<% win_pct = win_pct!=1 ? (team.total_wins/team.games_played).toFixed(3).slice(1):(team.total_wins/team.games_played).toFixed(3) %>
+				<td class=<%= win_pct_class %>><%= win_pct %></td>
+				<td><%= (team.total_techs/team.games_played).toFixed(1) %></td>
+			</tr>
+		</table>
+	</div>
+
+<!--
+	<div id="team-charts">
+		<div id="statProgressionChart" style="width: 515px; height: 450px"></div>
+		<div id="teamBarChart" style="width: 515px; height: 450px"></div>
+	</div>
+
+	<div id="basic-charts">
+		<!<div id="statProgressionChart" style="width: 600px; height: 450px"></div>
+		<div id="statBarChart" style="width: 800px; height: 450px"></div>
+	</div>-->
+
+	<div id="game-logs">
+		<table id="game-logs-table">
+			<thead>
+				<th>#</th>
+				<th>Date</th>
+				<th>Game</th>
+				<th>Score</th>
+				<th>Result</th>
+				<th>Mins</th>
+				<th>Pts</th>
+				<th>Asts</th>
+				<th>Reb</th>
+				<th>FGM</th>
+				<th>FGA</th>
+				<th>FG%</th>
+				<th>3PM</th>
+				<th>3PA</th>
+				<th>3P%</th>
+				<th>FTM</th>
+				<th>FTA</th>
+				<th>FT%</th>
+				<th>TS%</th>
+				<th>EFG%</th>
+				<th>TO</th>
+				<th>+/-</th>
+				<th>Techs</th>
+			</thead>
+			<tbody id="gl-data">
+				
+			</tbody>
+		</table>
+	</div>
+
+	<script type="text/javascript" src="/search_bar.js"></script>
+	<script type="text/javascript" src="/datatables.min.js"></script>
+    <script type="text/javascript">
+    	$(document).ready(function () {
+			$('#players-table').DataTable({
+				columnDefs: [
+					{"orderSequence": ["desc", "asc"], "targets": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]}
+				],
+				order: [[3, 'desc']],
+				pageLength: 50
+			});
+			$('.dataTables_length').addClass('bs-select');
+		});
+    </script>
+    <script>
+    	$(function() {
+			var headers = $('table#players-table thead tr');
+				 
+
+			headers.children().click(function() {
+
+				headers.children().removeClass('highlight');
+			 
+				var index = $(this).prevAll().length;  
+				headers.find(':nth-child(' + (index + 1) + ')').addClass('highlight');
+			
+
+			});
+		});
+    </script>
+
+    <script type="text/javascript">
+    	const team_colors = {'Heat': '#98002e', 'Lakers': '#552583', 'Celtics': '#007a33', 'Clippers': '#c8102e', 'Nets': '#777D84', 'Hornets': '#00788c', 'Bulls': '#ce1141', 'Hawks': '#e03a3e', 'Suns': '#e56020', 'Mavericks': '#00538c', 'Nuggets': '#1d428a', 'Pistons': '#c8102e', 'Warriors': '#ffc72c', 'Rockets': '#ce1141', 'Pacers': '#002d62', 'Grizzlies': '#5d76a9', 'Bucks': '#00471b', 'Timberwolves': '#236192', 'Pelicans': '#0c2340', 'Knicks': '#f58426', 'Thunder': '#007ac1', 'Magic': '#0077c0', '76ers': '#006bb6', 'Trail Blazers': '#e03a3e', 'Kings': '#5a2d81', 'Spurs': '#c4ced4', 'Raptors': '#ce1141', 'Jazz': '#002b5c', 'Cavaliers': '#860038', 'Wizards': '#002b5c'};
+		const line_team_colors = {'Heat': 'red', 'Lakers': '#b707f7', 'Celtics': '#007a33', 'Clippers': 'red', 'Nets': 'silver', 'Hornets': '#00788c', 'Bulls': '#ce1141', 'Hawks': '#e03a3e', 'Suns': '#e56020', 'Mavericks': '#00538c', 'Nuggets': '#1d428a', 'Pistons': '#c8102e', 'Warriors': '#ffc72c', 'Rockets': '#ce1141', 'Pacers': '#002d62', 'Grizzlies': '#5d76a9', 'Bucks': '#00471b', 'Timberwolves': '#236192', 'Pelicans': 'red', 'Knicks': '#f58426', 'Thunder': '#007ac1', 'Magic': '#0077c0', '76ers': '#247fff', 'Trail Blazers': '#e03a3e', 'Kings': '#5a2d81', 'Spurs': '#c4ced4', 'Raptors': '#ce1141', 'Jazz': '#002b5c', 'Cavaliers': '#860038', 'Wizards': '#002b5c'};
+    </script>
+
+    <script type="text/javascript">
+    	var player_stats;
+    	fetch('<%= "/api/stats/teams/"+team.name.split(" ").join("")+"/players/list" %>')
+		.then(res => res.json())
+		.then(players => {
+			player_stats = players;
+
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let data_arr = players.map(player => [player.name, player.total_points/player.games_played]);
+	    		data_arr.unshift(['Player', 'PPG']);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: 'PPG by Player',
+	    			//height: 450,
+	    			//width: 800,
+	    			vAxis: {minValue: 0, maxValue: 35}
+	    		};
+
+	    		var chart = new google.visualization.ColumnChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    })
+    </script>
+
+    <script type="text/javascript">
+    	document.getElementById("gp-col").addEventListener("click", gpGraphs);
+	    	function gpGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let data_arr = player_stats.map(player => [player.name, player.games_played]);
+	    		data_arr.unshift(['Player', 'Games Played']);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: 'Total Games Played by Player',
+	    			//vAxis: {minValue: 0, maxValue: 40}
+	    		};
+
+	    		var chart = new google.visualization.ColumnChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+    	document.getElementById("mpg-col").addEventListener("click", mpgGraphs);
+	    	function mpgGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let data_arr = player_stats.map(player => [player.name, player.total_mins/player.games_played]);
+	    		data_arr.unshift(['Player', 'MPG']);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: 'Minutes Per Game by Player',
+	    			vAxis: {minValue: 0, maxValue: 40}
+	    		};
+
+	    		var chart = new google.visualization.ColumnChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+    	document.getElementById("ppg-col").addEventListener("click", ppgGraphs);
+	    	function ppgGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let data_arr = player_stats.map(player => [player.name, player.total_points/player.games_played]);
+	    		data_arr.unshift(['Player', 'PPG']);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: 'PPG by Player',
+	    			vAxis: {minValue: 0, maxValue: 35}
+	    		};
+
+	    		var chart = new google.visualization.ColumnChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+    <script type="text/javascript">
+    	document.getElementById("apg-col").addEventListener("click", apgGraphs);
+	    	function apgGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let data_arr = player_stats.map(player => [player.name, player.total_assists/player.games_played]);
+	    		data_arr.unshift(['Player', 'APG']);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: 'APG by Player',
+	    			vAxis: {minValue: 0, maxValue: 10}
+	    		};
+
+	    		var chart = new google.visualization.ColumnChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+    	document.getElementById("rpg-col").addEventListener("click", rpgGraphs);
+	    	function rpgGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let data_arr = player_stats.map(player => [player.name, player.total_rebounds/player.games_played]);
+	    		data_arr.unshift(['Player', 'RPG']);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: 'RPG by Player',
+	    			vAxis: {minValue: 0, maxValue: 10}
+	    		};
+
+	    		var chart = new google.visualization.ColumnChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+    	document.getElementById("TOs-col").addEventListener("click", tosGraphs);
+	    	function tosGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let games_played = <%= team.games_played %>;
+	    		let data_arr = player_stats.map(player => [player.name, player.total_TOs]);
+	    		data_arr.unshift(['Player', 'Turnovers']);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: 'Total Turnovers by Player',
+	    			vAxis: {minValue: 0, maxValue: games_played*5}
+	    		};
+
+	    		var chart = new google.visualization.ColumnChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+    	function getOnOff(player, team) {
+			const GAME_LENGTH = 48;
+			//console.log(player.name);
+			let total_off_court = team.total_point_differential-player.total_plus_minus;
+			let total_mins_off = (team.games_played*GAME_LENGTH+team.total_ots*5)-player.total_mins;
+			//console.log("off court: " + total_off_court);
+			//console.log("mins off: " + total_mins_off);
+
+			let per48_off = total_off_court*(GAME_LENGTH/total_mins_off);
+			let per48_on = player.total_plus_minus*(GAME_LENGTH/player.total_mins);
+
+			//console.log("per48_off: " + per48_off);
+			//console.log("per48_on: " + per48_on);
+			return (per48_on-per48_off);
+
+		}
+
+    	document.getElementById("on-off-col").addEventListener("click", onOffGraphs);
+	    	function onOffGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let team = {'total_point_differential': <%= team.total_point_differential %>,
+    				'games_played': <%= team.games_played %>,
+    				'total_ots': <%= team.total_ots %>};
+    			//min 20 min played
+	    		let data_arr = player_stats.filter(player => player.total_mins>=20).map(player => [player.name, getOnOff(player, team)]);
+	    		data_arr.unshift(['Player', 'On/Off']);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: 'On/Off by Player',
+	    			vAxis: {minValue: -20, maxValue: 20}
+	    		};
+
+	    		var chart = new google.visualization.ColumnChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+    	document.getElementById("tp-pct-col").addEventListener("click", threeGraphs);
+    	document.getElementById("tpm-col").addEventListener("click", threeGraphs);
+    	document.getElementById("tpa-col").addEventListener("click", threeGraphs);
+    	function threeGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let team = {'games_played': <%= team.games_played %>};
+	    		//min 1 attempt a game
+	    		let data_arr = player_stats.map(player => [player.total_3sA>=team.games_played*1 ? (player.total_3sA/player.games_played):null, player.total_3sM/player.total_3sA, player.name+'\n'+'Attempts: '+(player.total_3sA/player.games_played).toFixed(1)+'\nPct: '+(player.total_3sM/player.total_3sA*100).toFixed(1)+"%"]);
+	    		data_arr.unshift(["3's Attempted Per Game", "3 Point Percentage", {role: 'tooltip'}]);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: "3's by Player",
+	    			vAxis: {title: "3 Point Percentage", minValue: .3, maxValue: .45, format: 'percent'},
+	    			hAxis: {title: "3's Attempted Per Game", minValue: 0, maxValue: 10},
+	    			colors: [team_colors['<%= team.name %>']]
+	    		};
+
+	    		var chart = new google.visualization.ScatterChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+    	document.getElementById("fg-pct-col").addEventListener("click", twoGraphs);
+    	document.getElementById("fgm-col").addEventListener("click", twoGraphs);
+    	document.getElementById("fga-col").addEventListener("click", twoGraphs);
+    	function twoGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let team = {'games_played': <%= team.games_played %>};
+	    		//min 1 attempt a game
+	    		let data_arr = player_stats.map(player => [player.total_fga-player.total_3sA>=team.games_played*1 ? (player.total_fga-player.total_3sA)/player.games_played:null, (player.total_fgm-player.total_3sM)/(player.total_fga-player.total_3sA), player.name+'\n'+'Attempts: '+((player.total_fga-player.total_3sA)/player.games_played).toFixed(1)+'\nPct: '+((player.total_fgm-player.total_3sM)/(player.total_fga-player.total_3sA)*100).toFixed(1)+"%"]);
+	    		data_arr.unshift(["2's Attempted Per Game", "2 Point Percentage", {role: 'tooltip'}]);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: "2's by Player",
+	    			vAxis: {title: "2 Point Percentage", minValue: .4, maxValue: .75, format: 'percent'},
+	    			hAxis: {title: "2's Attempted Per Game", minValue: 0, maxValue: 10}
+	    		};
+
+	    		var chart = new google.visualization.ScatterChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+    	document.getElementById("ft-pct-col").addEventListener("click", ftGraphs);
+    	document.getElementById("ftm-col").addEventListener("click", ftGraphs);
+    	document.getElementById("fta-col").addEventListener("click", ftGraphs);
+    	function ftGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let team = {'games_played': <%= team.games_played %>};
+	    		//min 1 attempt a game
+	    		let data_arr = player_stats.map(player => [player.total_fta>=team.games_played*.3 ? player.total_fta/player.games_played:null, player.total_ftm/player.total_fta, player.name+'\n'+'Attempts: '+(player.total_fta/player.games_played).toFixed(1)+'\nPct: '+(player.total_ftm/player.total_fta*100).toFixed(1)+"%"]);
+	    		data_arr.unshift(["Free Throws Attempted Per Game", "Free Throw Percentage", {role: 'tooltip'}]);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: "Free Throws by Player",
+	    			vAxis: {title: "Free Throw Percentage", minValue: .5, maxValue: 1, format: 'percent'},
+	    			hAxis: {title: "Free Throws Attempted Per Game", minValue: 0, maxValue: 10}
+	    		};
+
+	    		var chart = new google.visualization.ScatterChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+    	document.getElementById("pm-col").addEventListener("click", plusMinusGraphs);
+	    	function plusMinusGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let games_played = <%= team.games_played %>;
+	    		let data_arr = player_stats.map(player => [player.name, player.total_plus_minus]);
+	    		data_arr.unshift(['Player', 'Plus Minus']);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: 'Total Plus Minus by Player',
+	    			vAxis: {minValue: games_played*-5, maxValue: games_played*5}
+	    		};
+
+	    		var chart = new google.visualization.ColumnChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+    	document.getElementById("win-pct-col").addEventListener("click", winPctGraphs);
+	    	function winPctGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let data_arr = player_stats.map(player => [player.name, player.total_wins/player.games_played]);
+	    		data_arr.unshift(['Player', 'Win%']);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: 'Win Percentage by Player',
+	    			vAxis: {minValue: 0, maxValue: 1}
+	    		};
+
+	    		var chart = new google.visualization.ColumnChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+    	document.getElementById("techs-col").addEventListener("click", techGraphs);
+	    	function techGraphs() {
+	    	google.charts.load("current", {packages:['corechart']});
+	    	google.charts.setOnLoadCallback(drawBarChart);
+
+	    	function drawBarChart() {
+	    		if (document.getElementById("statBarChart").style.display != 'block') {
+	        		document.getElementById("statBarChart").style.display = 'block';
+	        		document.getElementById("statProgressionChart").style.display = 'none';
+	        		document.getElementById("teamBarChart").style.display = 'none';
+	        	}
+	    		let data_arr = player_stats.map(player => [player.name, player.total_techs]);
+	    		data_arr.unshift(['Player', 'Technical Fouls']);
+	    		let data = google.visualization.arrayToDataTable(data_arr);
+	    		let options = {
+	    			title: 'Technical Fouls by Player',
+	    			vAxis: {minValue: 0, maxValue: 5}
+	    		};
+
+	    		var chart = new google.visualization.ColumnChart(document.getElementById("statBarChart"));
+	    		chart.draw(data, options);
+	    	}
+	    }
+    </script>
+
+    <script type="text/javascript">
+		const playerCardTemplate = document.querySelector("[data-player-template]");
+		const playerCardContainer = document.querySelector("[data-player-container]");
+		const playerSearchInput = document.querySelector("[player-data-search]");
+		const playerCard = document.querySelector("[player-data-card]");
+
+		let players = [];
+
+		fetch("/api/stats/players/names")
+		.then(res => res.json())
+		.then(data => {
+			players = data.map(player_info => {
+				const card = playerCardTemplate.content.cloneNode(true).children[0];
+				const player = card.querySelector("[data-player]");
+				player.textContent = player_info.name;
+				player.id = player_info._id;
+				playerCardContainer.append(card);
+				return { name: player_info.name, element: card };
+			})
+		})
+
+		playerSearchInput.addEventListener("input", e => {
+			const value = e.target.value;
+			players.forEach(player => {
+				const isVisible = (player.name.toLowerCase()).includes(value.toLowerCase());
+				player.element.classList.toggle("hide", !isVisible);
+			})
+		})
+
+		$(document).on('mousedown', '#player-cards-div div div', function(e) {
+			e.preventDefault();
+			window.location.href = "/stats/players/"+e.target.id;
+		})
+
+		document.getElementById("player-search").addEventListener("focus", showPlayers);
+
+		function showPlayers() {
+			if (document.getElementById("player-cards-div").style.display != "block") {
+				document.getElementById("player-cards-div").style.display = "block";
+			}
+		}
+
+		document.getElementById("player-search").addEventListener("blur", hidePlayers);
+
+		function hidePlayers() {
+			if (document.getElementById("player-cards-div").style.display != "none") {
+				document.getElementById("player-cards-div").style.display = "none";
+			}
+		}
+	</script>
+
+	<script type="text/javascript">
+		const teamCardTemplate = document.querySelector("[data-team-template]");
+		const teamCardContainer = document.querySelector("[data-team-container]");
+		const teamSearchInput = document.querySelector("[team-data-search]");
+		const teamCard = document.querySelector("[team-data-card]");
+
+		let teams = [];
+
+		fetch("/api/stats/teams/names")
+		.then(res => res.json())
+		.then(data => {
+			teams = data.map(team_info => {
+				const card = teamCardTemplate.content.cloneNode(true).children[0];
+				const team = card.querySelector("[data-team]");
+				team.textContent = team_info.name;
+				team.id = team_info.name.split(" ").join("").toLowerCase();
+				teamCardContainer.append(card);
+				return { name: team_info.name, element: card };
+			})
+		})
+
+		teamSearchInput.addEventListener("input", e => {
+			const value = e.target.value;
+			teams.forEach(team => {
+				const isVisible = (team.name.toLowerCase()).includes(value.toLowerCase());
+				team.element.classList.toggle("hide", !isVisible);
+			})
+		})
+
+		$(document).on('mousedown', '#team-cards-div div div', function(e) {
+			e.preventDefault();
+			window.location.href = "/stats/teams/"+e.target.id;
+		})
+
+		document.getElementById("team-search").addEventListener("focus", showTeams);
+
+		function showTeams() {
+			if (document.getElementById("team-cards-div").style.display != "block") {
+				document.getElementById("team-cards-div").style.display = "block";
+			}
+		}
+
+		document.getElementById("team-search").addEventListener("blur", hideTeams);
+
+		function hideTeams() {
+			if (document.getElementById("team-cards-div").style.display != "none") {
+				document.getElementById("team-cards-div").style.display = "none";
+			}
+		}
+	</script>
+
+	<script type="text/javascript">
+		const homeAway = {"H": "vs", "A": "at"};
+		var team_stats;
+		let team_id = "<%= team._id %>";
+		fetch("/api/stats/teams/gamelogs/"+team_id)
+		.then(res => res.json())
+		.then(team => {
+			team_stats = team;
+			let team_game_logs = team.game_logs;
+			var temp = "";
+			for (i = 0; i < team_game_logs.length; i++) {
+				temp += "<tr>";
+				temp += "<td>"+(i+1)+"</td>";
+				let game_date_str = new Date(team_game_logs[i].game_date);
+				game_date_str = game_date_str.getFullYear()+'-'+(game_date_str.getMonth()+1)+'-'+game_date_str.getDate();
+				temp += "<td>"+game_date_str+"</td>";
+				temp += "<td>"+homeAway[team_game_logs[i].location]+" "+"<a id='team-link' href="+'/stats/teams/'+team_game_logs[i].opponent.split(" ").join("").toLowerCase()+">"+team_game_logs[i].opponent+"</a>"+"</td>";
+				let params = (team_game_logs[i].location == "H") ? ("<%= team.name.split(" ").join("").toLowerCase() %>"+"/"+team_game_logs[i].opponent.split(" ").join("").toLowerCase()+"/"+game_date_str):(team_game_logs[i].opponent.split(" ").join("").toLowerCase()+"/"+"<%= team.name.split(" ").join("").toLowerCase() %>"+"/"+game_date_str);
+				//console.log(params);
+				temp += "<td>"+"<a id='box-link' href="+'/stats/boxscores/'+params+">"+team_game_logs[i].points+"-"+(team_game_logs[i].points-team_game_logs[i].point_differential)+"</a>"+"</td>";
+				temp += "<td>"+(team_game_logs[i].win ? "W":"L")+"</td>";
+				//console.log("i: "+i+" "+team_game_logs[i].game_date);
+				//console.log("j: "+j+" "+player_game_logs[j].game_date);
+				temp += "<td>"+(team_game_logs[i].ots*5+48)+"</td>";
+				temp += "<td>"+team_game_logs[i].points+"</td>";
+				temp += "<td>"+team_game_logs[i].assists+"</td>";
+				temp += "<td>"+team_game_logs[i].rebounds+"</td>";
+				temp += "<td>"+team_game_logs[i].fgm+"</td>";
+				temp += "<td>"+team_game_logs[i].fga+"</td>";
+				temp += "<td>"+(team_game_logs[i].fgm/team_game_logs[i].fga*100).toFixed(1)+"</td>";
+				temp += "<td>"+team_game_logs[i].tpm+"</td>";
+				temp += "<td>"+team_game_logs[i].tpa+"</td>";
+				temp += "<td>"+(team_game_logs[i].tpm/team_game_logs[i].tpa*100).toFixed(1)+"</td>";
+				temp += "<td>"+team_game_logs[i].ftm+"</td>";
+				temp += "<td>"+team_game_logs[i].fta+"</td>";
+				temp += "<td>"+(team_game_logs[i].ftm/team_game_logs[i].fta*100).toFixed(1)+"</td>";
+				temp += "<td>"+((team_game_logs[i].fgm+.5*team_game_logs[i].tpm+.5*team_game_logs[i].ftm)/(team_game_logs[i].fga+.44*team_game_logs[i].fta)*100).toFixed(1)+"</td>";
+				temp += "<td>"+((team_game_logs[i].fgm+.5*team_game_logs[i].tpm)/(team_game_logs[i].fga)*100).toFixed(1)+"</td>";
+				temp += "<td>"+team_game_logs[i].TOs+"</td>";
+				let pm_class = team_game_logs[i].point_differential>0 ? "positive":(team_game_logs[i].point_differential==0) ? "grey":"negative";
+				let pm_str = team_game_logs[i].point_differential>0 ? "+"+team_game_logs[i].point_differential:team_game_logs[i].point_differential;
+				temp += "<td class="+pm_class+">"+pm_str+"</td>";
+				temp += "<td>"+team_game_logs[i].techs+"</td>";
+				temp += "</tr>";
+
+			}
+			document.getElementById("gl-data").innerHTML = temp;
+
+			$(document).ready(function () {
+				$('#game-logs-table').DataTable({
+					columnDefs: [
+						{"orderSequence": ["desc", "asc"], "targets": [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]}
+					],
+					//order: [[4, 'desc']],
+					pageLength: 100
+				});
+				$('.dataTables_length').addClass('bs-select');
+			});
+
+			$(function() {
+			var headers = $('table#game-logs-table thead tr');
+				headers.children().click(function() {
+
+					headers.children().removeClass('highlight');
+				 
+					var index = $(this).prevAll().length;  
+					headers.find(':nth-child(' + (index + 1) + ')').addClass('highlight');
+				
+
+				});
+			});
+
+		});
+	</script>
+
+	<script type="text/javascript" src="/teamStatsCharts.js"></script>
+	<script type="text/javascript">
+		var team_name = '<%= team.name %>';
+	</script>
+	<script type="text/javascript" src="/teamHistoricalCharts.js"></script>
+
+</body>
+</html>

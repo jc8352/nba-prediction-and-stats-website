@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="/membertakes.css">
+		<link rel="stylesheet" type="text/css" href="/nav_bar.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<script
+  			src="https://code.jquery.com/jquery-3.6.1.min.js"
+  			integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+  			crossorigin="anonymous"></script>
+  		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  		<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4083353808185208"
+     crossorigin="anonymous"></script>
+		<title>NBA Take Tracker</title>
+	</head>
+	<body>
+		<div id="nav-bar">
+			<div id= "top-left">
+				<div id="logo-container"><a href="/"><img src='/basketball.jpeg' id='logo' width=100% height=auto></a></div>
+				<span id="users-tab"><a href="/users">Users</a></span>
+				<span id="stats-tab"><a href="/stats">Stats</a></span>
+				<span id="charts-tab"><a href="/charts">Charts</a></span>
+			</div>
+			<div id="middle"></div>
+			<div id= "top-right">
+				<% if (user_info) { %>
+				<span id= "logout"><a href="/logout">Logout</a></span>
+				<span id= "logged-in-username"><a href=<%= "/users/" + user_info.id %>><%= user_info.username %></a></span>
+				<% } else { %>
+				<span id= "sign-in"><a href="/login">Login</a></span>
+				<% } %>
+				<span id='create-take'><a href="/users/createtake">Create Take</a></span>
+
+				<div class="user-search-cards">
+					<div class="search-wrapper">
+						<i class="fa fa-search"></i>
+						<input type="search" id="search" placeholder="Search Users" data-search>
+					</div>
+					<div class="user-cards" id="user-cards-div" data-user-cards-container>
+						<template data-user-template>
+							<a>
+							<div class="card" data-card>
+								<div class="username" data-username></div>
+							</div>
+							</a>
+						</template>
+					</div>
+				</div>
+			</div>
+		</div>
+		<h1><%= media_member.name %></h1>
+		<div id="pfp-container">
+			<img src=<%= "/pfp_images/" + media_member.pfp %> id='pfp' width='140px' height='140px'>
+		</div>
+
+		<% var ttpct = media_member.tt_pct %>
+		<% var pct_gain = media_member.pct_gain %>
+		<% var class_name %>
+
+		<% var class_name %>
+		<% var class_name_2 %>
+		<% var ttpct = media_member.tt_pct %>
+		<% var pct_gain = media_member.pct_gain %>
+		<% class_name = "even" %>
+			<% if (ttpct < .5) {
+				class_name = "negative"
+				} else if (ttpct > .5) {
+				class_name = "positive"	} %>
+		<h4>True Take Percentage: <span class=<%= class_name %>><%= (ttpct*100).toFixed(1) %>%</span></h4>
+		<% class_name_2 = "even" %>
+			<% let pct_str = "0.0%" %>
+			<% if (pct_gain < 0) {
+				pct_str = "↓"+(pct_gain*100).toFixed(1)+"%"
+				class_name_2 = "negative"}
+				else if (pct_gain > 0) {
+					pct_str = "↑"+(pct_gain*100).toFixed(1)+"%"
+					class_name_2 = "positive"} %>
+		<h4 class="final">Percent Gain: <span class=<%= class_name_2 %>><%= pct_str %></span></h4>
+
+		<% var right = media_member.right %>
+		<% var total = media_member.total_takes %>
+		<% var wrong = media_member.wrong %>
+		<% var gain = media_member.money_gain %>
+		
+		<div id="summary">
+			<p class="gen-info">Total takes: <span id="total-takes" style="color:orange"><%= total %></span></p>
+			<p class="gen-info">Overall record: <span id="overall-record" style="color: #a142f5"><%= right %>-<%= wrong %></span></p>
+			<p class="gen-info" id="overall-pct-div">Overall true take %: <span id="overall-pct" class=<%= class_name %>><%= (ttpct*100).toFixed(1) %>%</span></p>
+			<% let gain_str = "$0.00" %>
+			<% class_name = "even" %>
+			<% if (gain < 0) {
+				gain_str = "-$"+(gain*-1).toFixed(2)
+				class_name = "negative"}
+				else if (gain > 0) {
+					gain_str = "$"+(gain).toFixed(2)
+					class_name = "positive"} %>
+			<p class="gen-info">Overall money gain: <span id="overall-gain" class=<%= class_name %>><%= gain_str %></span></p>
+			<p class="gen-info" id="overall-pct-gain-div">Overall percent gain: <span id="pct-gain" class=<%= class_name_2 %>><%= pct_str %></span></p>
+		</div>
+
+		<div id="mobile-rotate">*rotate device for take explanations</div>
+		
+		<% var takes_list = media_member.takes %>
+		<% function get_date(take_obj) {
+			let month = take_obj.date.slice(0,2);
+			let day = take_obj.date.slice(3,5);
+			let year = take_obj.date.slice(6, 10);
+			return [month, day, year];
+		}
+
+
+		function sorting_helper(a, b) {
+			let [a_month, a_day, a_year] = get_date(a);
+			let [b_month, b_day, b_year] = get_date(b);
+			if (a_year > b_year) {
+				return 1;
+			}
+			else if (a_year == b_year) {
+				if (a_month > b_month) {
+					return 1;
+				}
+				else if (a_month == b_month) {
+					if (a_day > b_day) {
+						return 1;
+					}
+					else {
+						return -1;
+					}
+				}
+				else {
+					return -1;
+				}
+			}
+			else {
+				return -1;
+			}
+		} %>
+
+		<% function getTime(timestamp) {
+			let colon_index = timestamp.indexOf(":");
+			return parseInt(timestamp.slice(0, colon_index))*60+parseInt(timestamp.slice(colon_index+1));
+		}%>
+
+
+		<% takes_list.sort((a, b) => sorting_helper(a,b)) //sort list of takes by date%> 
+		<div id="table">
+			<% if (takes_list != null) { %>
+			<table id="takes-table">
+			<thead>
+				<tr class='toprow'>
+					<th onclick="sortTable(0, 'asc')" class='take'>Take</th>
+					<th onclick="sortTable(1, 'asc')" class='date highlight'>Date</th>
+					<th onclick="sortTable(2, 'desc')" class='odds'>Odds</th>
+					<th onclick="sortTable(3, 'asc')" class='result'>Result</th>
+					<th onclick="sortTable(4, 'asc')" class='explanation'>Explanation</th>
+					<th onclick="sortTable(5, 'desc')" class='record'>Record</th>
+					<th onclick="sortTable(6, 'desc')" class='ttpct'>TT%</th>
+					<th onclick="sortTable(7, 'desc')" class='gain'>Gain</th>
+					<th onclick="sortTable(8, 'desc')" class='overall'>Overall</th>
+				</tr>
+			</thead>
+				<% var curr_right = 0 %>
+				<% var curr_total = 0 %>
+				<% var odds_string %>
+				<% var gain = 0 %>
+				<% var total_gain = 0 %>
+				<% var in_progress = 0 %>
+				<% var result_string, gain_string, t_gain_string %>
+				<% t_gain_string = "$0.00" %>
+				<% const BET_VALUE = 50 %>
+				<% class_name = "grey" %>
+				<tbody>
+				<% for (i = 0; i < takes_list.length; i++) { //populate table rows with takes%>
+				<tr>
+					<td><a href=<%= takes_list[i].link_to_take %>&start=<%= getTime(takes_list[i].timestamp) %> class="take-link"><p><%= media_member.total_takes-curr_total-in_progress %>. <%= takes_list[i].take %></p></a></td>
+					<td><%= takes_list[i].date //Date %></td>
+
+					<% 	if (takes_list[i].betting_odds > 0) 
+							{odds_string = "+" + takes_list[i].betting_odds}
+						else if (takes_list[i].betting_odds == 0) 
+							{odds_string = "N/A"}
+						else 
+							{odds_string = takes_list[i].betting_odds} %>
+
+					<td><%= odds_string //Odds %></td>
+
+				<% if (!takes_list[i].inProgress) { %>
+					<% if (takes_list[i].result) 
+							{result_string = "Right"; class_name = "green"}
+						else 
+							{result_string = "Wrong"; class_name = "red"} %>
+
+					<td class=<%= class_name %>><%= result_string //Result %></td>
+					<td class="explan-col"><%= takes_list[i].explanation //Explanation %></td>
+
+					<% curr_total += 1 %>
+					<% curr_right += (takes_list[i].result) ? 1:0 %>
+
+					<td><%= curr_right %>-<%= curr_total-curr_right //Record %></td>
+					<td><%= (curr_right/curr_total*100).toFixed(1)//Correct Pct %>%</td>
+
+					<% var correct = (takes_list[i].result) ? 1:0 %>
+					<% var correct = (takes_list[i].result) ? 1:0 %>
+					<% if (takes_list[i].betting_odds < 0) {
+							gain = (1/(-1*takes_list[i].betting_odds/100)+1)*BET_VALUE*correct - BET_VALUE;
+						}
+						else if (takes_list[i].betting_odds == 0) {
+							gain = 0;
+						}
+						else {
+							gain = BET_VALUE*(takes_list[i].betting_odds/100+1)*correct-BET_VALUE;
+						} %>
+					<% class_name = "grey" %>
+					<% gain_string = "$0.00" %>
+					<% if (gain < 0) {class_name = "red"; 
+										gain_string = "-$"+((gain*-1).toFixed(2))}
+						else if (gain > 0) {class_name = "green"; 
+										gain_string = "+$"+gain.toFixed(2)}%>
+
+					<td class=<%= class_name %>><%= gain_string //Take gain %></td>
+
+					<% class_name = "grey" %>
+					<% t_gain_string = "$0.00" %>
+					<% total_gain += gain %>
+					<% if (total_gain < 0) {class_name = "red"; 
+										t_gain_string = "-$"+((total_gain*-1).toFixed(2))}
+						else if (total_gain > 0) {class_name = "green"; 
+										t_gain_string = "$"+total_gain.toFixed(2)}%>
+
+					<td class=<%= class_name %>><%= t_gain_string //Total gain %></td>
+				<% } else { %>
+					<td class="grey">In Progress</td>
+					<% in_progress++ %>
+					<td class="explan-col"><%= takes_list[i].explanation //Explanation %></td>
+					<td><%= curr_right %>-<%= curr_total-curr_right //Record %></td>
+					<td><%= (curr_total>0) ? (curr_right/curr_total*100).toFixed(1):(0).toFixed(1)//Correct Pct %>%</td>
+
+					<% if (takes_list[i].betting_odds < 0) {
+						gain = BET_VALUE/(takes_list[i].betting_odds/100)
+					}
+					else if (takes_list[i].betting_odds == 0) {
+						gain = 0
+					}
+					else {
+						gain = takes_list[i].betting_odds/100*BET_VALUE
+					} %>
+					<% gain_string = "+$"+gain.toFixed(2) %>
+
+					<td class="grey"><%= gain_string %></td>
+					<td class=<%= class_name %>><%= t_gain_string //Total gain %></td>
+				<% } %>
+				</tr>
+				<% } %>
+			</tbody>
+			</table>
+			<% } %>
+		</div>
+
+		<script type="text/javascript" src= "/media_profiles.js"></script>
+
+		<script>
+			reverseDates();
+		</script>
+
+		<script>
+			$(function() {
+  				var headers = $('table thead tr');
+  				 
+
+  				headers.children().click(function() {
+
+    			headers.children().removeClass('highlight');
+    			 
+    			var index = $(this).prevAll().length;  
+    			headers.find(':nth-child(' + (index + 1) + ')').addClass('highlight');
+    			
+
+  				});
+			});
+		</script>
+
+
+     	<script type="text/javascript" src="/search_bar.js"></script>
+
+	</body>
+</html>

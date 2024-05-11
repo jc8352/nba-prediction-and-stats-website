@@ -1,0 +1,58 @@
+body {
+	background-color: black;
+	color: #c7c5c5;
+	font-size: 16px;
+}
+
+a {
+	text-decoration: none;
+	color: inherit;
+}
+
+#myChart {
+	margin-top: 15px;
+	margin-bottom: 15px;
+	margin-left: auto;
+	margin-right: auto;
+	border: 2px solid #3471eb;
+}
+
+#projectionsChart {
+	margin-top: 15px;
+	margin-bottom: 15px;
+	margin-left: auto;
+	margin-right: auto;
+	border: 2px solid #3471eb;
+}
+
+#historicalChart {
+	margin-top: 15px;
+	margin-bottom: 15px;
+	margin-left: auto;
+	margin-right: auto;
+	border: 2px solid #44D62C;
+}
+
+div#historicalChart svg {
+	margin-left: 25px;
+	margin-top: 25px;
+}
+
+div#historicalChart path {
+	stroke-width: 3;
+}
+
+div#takes-select {
+	width: 500px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+select#takes {
+	width: 500px;
+	text-align: center;
+	background-color: black;
+	color: aliceblue;
+}
+
+

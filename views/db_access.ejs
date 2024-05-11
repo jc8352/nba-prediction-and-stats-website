@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		label, input {
+			margin: 5px;
+		}
+		#take, #explan {
+			width: 500px;
+		}
+		#link {
+			width: 300px;
+		}
+	</style>
+</head>
+<body>
+	<h3>Add take to database: </h3>
+	<form id='new-take'>
+		<label for="name">Name:</label>
+		<input type="text" id="name" name="name">
+
+		<label for="affil">Affiliation:</label>
+		<input type="text" id="affil" name="affil">
+
+		<label for="take">Take:</label>
+		<input type="text" id="take" name="take"> <br>
+
+
+		<label for="link">Link To Take:</label>
+		<input type="url" id="link" name="link">
+
+		<label for="time">Timestamp:</label>
+		<input type="text" id="time" name="time"> <br>
+
+		<label for="odds">Betting Odds:</label>
+		<input type="text" id="odds" name="odds">
+
+		<label for="result">Result:</label>
+		<input type="radio" id="result" name="result" value="1">
+		<label for="right">Right</label>
+		<input type="radio" id="result" name="result" value="0">
+		<label for="wrong">Wrong</label> <br>
+
+		<label for="explan">Explanation:</label>
+		<input type="text" id="explan" name="explan">
+
+		<label for="take-date">Date:</label>
+		<input type="date" id="take-date" name="take-date"> <br>
+
+		<input type="submit" value="submit">
+	</form>
+	<br>
+		<!--<label for="member">Media Member: </label>-->
+		<h3>Add image to media member profile:</h3>
+		<form id='upload-pfp'>
+		<label for="user_id">Name:</label>
+        <select name="user_id" id="media_name">
+            	<% info.forEach(function(item) { %>
+              		<option value=<%= item._id %>><%= item.name %></option>
+              	<% }) %>
+              	<!--<option value="343425" selected>J C</option>-->
+        </select>
+
+
+		<label for="pfp">Select image:</label>
+		<input type="file" name="pfp" id="pfp">
+
+		<button class="submit-button" type="submit">Submit</button>
+	</form>
+
+	<script>
+		const form = document.getElementById("upload-pfp");
+
+		form.addEventListener("submit", submitForm);
+
+		function submitForm(e) {
+		    e.preventDefault();
+		    var id = document.getElementById("media_name");
+		    id = id.options[id.selectedIndex].value;
+		    const pfp = document.getElementById("pfp");
+		    const formData = new FormData();
+		    //console.log(id);
+		    formData.append("id", id);
+		    formData.append("pfp", pfp.files[0]);
+		    fetch("/api/uploadImage", {
+		        method: 'POST',
+		        body: formData,
+		        /*headers: {
+		          "Content-Type": "multipart/form-data"
+		        }*/
+		    })
+		        .then((res) => console.log(res))
+		        .catch((err) => ("Error occured", err));
+		}
+	</script>
+
+</body>
+</html>

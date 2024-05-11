@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="/charts.css">
+	<link rel="stylesheet" type="text/css" href="/nav_bar.css">
+	<script
+  		src="https://code.jquery.com/jquery-3.6.1.min.js"
+  		integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+  		crossorigin="anonymous"></script>
+  	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  	<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4083353808185208"
+     crossorigin="anonymous"></script>
+	<title>NBA Take Tracker</title>
+</head>
+<body>
+	<div id="nav-bar">
+		<div id= "top-left">
+			<div id="logo-container"><a href="/"><img src='/basketball.jpeg' id='logo' width=100% height=auto></a></div>
+			<span id="users-tab"><a href="/users">Users</a></span>
+			<span id="stats-tab"><a href="/stats">Stats</a></span>
+			<span id="charts-tab"><a href="/charts">Charts</a></span>
+		</div>
+		<div id="middle"></div>
+		<div id= "top-right">
+			<% if (user) { %>
+			<span id= "logout"><a href="/logout">Logout</a></span>
+			<span id= "logged-in-username"><a href=<%= "/users/" + user.id %>><%= user.username %></a></span>
+			<% } else { %>
+			<span id= "sign-in"><a href="/login">Login</a></span>
+			<% } %>
+			<span id='create-take'><a href="/users/createtake">Create Take</a></span>
+			
+			<div class="user-search-cards">
+				<div class="search-wrapper">
+					<i class="fa fa-search"></i>
+					<input type="search" id="search" placeholder="Search Users" data-search>
+				</div>
+				<div class="user-cards" id="user-cards-div" data-user-cards-container>
+					<template data-user-template>
+						<a>
+						<div class="card" data-card>
+							<div class="username" data-username></div>
+						</div>
+						</a>
+					</template>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="takes-select">
+		<select name="takes" id="takes" onchange="getTake()">
+			<% takes.forEach(function(item) { %>
+	             <option value=<%= item._id %>><%= item.take %></option>
+	        <% }) %>
+		</select>
+	</div>
+
+
+	<div id="myChart" style="width:100%; max-width:700px; height:520px;"></div>
+	<div id="projectionsChart" style="width:100%; max-width:1100px; height:520px;"></div>
+	<div id="historicalChart" style="width:100%; max-width:1050px; height:700px;"></div>
+
+	<script>
+		var team_colors = {'Miami Heat': '#98002e', 'Los Angeles Lakers': '#552583', 'Boston Celtics': '#007a33', 'La Clippers': '#c8102e', 'Los Angeles Clippers': '#c8102e', 'Brooklyn Nets': '#777D84', 'Charlotte Hornets': '#00788c', 'Chicago Bulls': '#ce1141', 'Atlanta Hawks': '#e03a3e', 'Phoenix Suns': '#e56020', 'Dallas Mavericks': '#00538c', 'Denver Nuggets': '#1d428a', 'Detroit Pistons': '#c8102e', 'Golden State Warriors': '#ffc72c', 'Houston Rockets': '#ce1141', 'Indiana Pacers': '#002d62', 'Memphis Grizzlies': '#5d76a9', 'Milwaukee Bucks': '#00471b', 'Minnesota Timberwolves': '#236192', 'New Orleans Pelicans': '#0c2340', 'New York Knicks': '#f58426', 'Oklahoma City Thunder': '#007ac1', 'Orlando Magic': '#0077c0', 'Philadelphia 76ers': '#006bb6', 'Portland Trail Blazers': '#e03a3e', 'Sacramento Kings': '#5a2d81', 'San Antonio Spurs': '#c4ced4', 'Toronto Raptors': '#ce1141', 'Utah Jazz': '#002b5c', 'Cleveland Cavaliers': '#860038', 'Washington Wizards': '#002b5c'};
+
+		var line_team_colors = {'Miami Heat': 'red', 'Los Angeles Lakers': '#b707f7', 'Boston Celtics': '#007a33', 'La Clippers': 'red', 'Los Angeles Clippers': 'red', 'Brooklyn Nets': 'silver', 'Charlotte Hornets': '#00788c', 'Chicago Bulls': '#ce1141', 'Atlanta Hawks': '#e03a3e', 'Phoenix Suns': '#e56020', 'Dallas Mavericks': '#00538c', 'Denver Nuggets': 'yellow', 'Detroit Pistons': '#c8102e', 'Golden State Warriors': '#ffc72c', 'Houston Rockets': '#ce1141', 'Indiana Pacers': '#002d62', 'Memphis Grizzlies': '#5d76a9', 'Milwaukee Bucks': '#00471b', 'Minnesota Timberwolves': '#236192', 'New Orleans Pelicans': 'red', 'New York Knicks': '#f58426', 'Oklahoma City Thunder': '#007ac1', 'Orlando Magic': '#0077c0', 'Philadelphia 76ers': '#247fff', 'Portland Trail Blazers': '#e03a3e', 'Sacramento Kings': '#5a2d81', 'San Antonio Spurs': '#c4ced4', 'Toronto Raptors': '#ce1141', 'Utah Jazz': '#002b5c', 'Cleveland Cavaliers': '#860038', 'Washington Wizards': '#002b5c'};
+
+	function donut_on() {
+	  var x = document.getElementById("myChart");
+	  if (x.style.display === "none") {
+	    x.style.display = "block";
+		}
+	}
+
+	function donut_off() {
+	  var x = document.getElementById("myChart");
+	  if (x.style.display !== "none") {
+	    x.style.display = "none";
+		}
+	}
+
+	function projection_on() {
+	  var x = document.getElementById("projectionsChart");
+	  if (x.style.display === "none") {
+	    x.style.display = "block";
+	  }
+	}
+
+	function projection_off() {
+	  var x = document.getElementById("projectionsChart");
+	  if (x.style.display !== "none") {
+	    x.style.display = "none";
+	  }
+	}
+		
+	function createProjectionsDonut(all_odds, xArray, chart_title) {
+		donut_off();
+		projection_on();
+		google.charts.load("current", {packages:['corechart']});
+	    google.charts.setOnLoadCallback(drawProjChart);
+	    function drawProjChart() {
+	    	var data_arr = all_odds.map(item => [item.participant, Math.round(item.participant_odds[item.participant_odds.length-1].projection*10)/10, team_colors[item.participant]]);
+	    	data_arr.unshift(["Team", "Wins Projection", { role: "style" }])
+	    	var data = google.visualization.arrayToDataTable(data_arr);
+	    	var options = {
+	    		title: chart_title,
+	    		width: 1100,
+	    		height: 500,
+	    		backgroundColor: 'black',
+				titleTextStyle: {color: 'aliceblue', fontSize: 20},
+				legend: {textStyle: {color: 'aliceblue', fontSize: 13, alignment: 'center'}},
+				hAxis: {
+			      title: 'Team',
+			      textStyle: {color: 'aliceblue', fontSize: 13}
+			    },
+			    vAxis: {
+			      title: 'Wins',
+			      format: '##.#',
+			      gridlines: {color: '#3d3d3d'},
+			      textStyle: {color: 'aliceblue'}
+			    },
+			    animation: {startup: true, duration: 3000, easing: 'out'}
+	    	}
+	    	var chart = new google.visualization.ColumnChart(document.getElementById("projectionsChart"));
+	    	chart.draw(data, options);
+	    }
+	}
+
+	function createProjectionsLine(all_odds, xArray, chart_title) {
+		if (xArray[0].includes(",") || xArray.length == 2) {
+			var line_chart_colors = ["red", "green", "blue", "purple", "gold", "silver","orange", "cyan", "#44D62C", "#3471eb"];
+		}
+		else {
+			var line_chart_colors = xArray.map(item => line_team_colors[item]);
+		}
+		google.charts.load('current', {packages: ['corechart', 'line']});
+		google.charts.setOnLoadCallback(drawProjCurveTypes);
+
+		function drawProjCurveTypes() {
+		  var data_arr = [];
+		  var data = new google.visualization.DataTable();
+		  data.addColumn('string', 'Date');
+		  var take_dates = [...new Set([].concat(...all_odds.map(item => item.participant_odds.map(item2 => item2.date))))].sort();
+		  for (i = 0; i < xArray.length; i++) {
+		  	data.addColumn('number', xArray[i]);
+		  }
+		  for (j = 0; j < take_dates.length; j++) { //# of days
+		  	let current_date = new Date(take_dates[j]);
+		  	data_arr.push([(current_date.getMonth()+1)+'-'+current_date.getDate()+'-'+current_date.getFullYear()]);
+		  	for (k = 0; k < xArray.length; k++) { //# of participants
+		  		if (all_odds[k].participant_odds.length < take_dates.length) { //if participant doesn't have odds for all days
+		  			if (all_odds[k].participant_odds.length <= j || all_odds[k].participant_odds[j].date != take_dates[j]) { //if j > odds length or not on right day
+		  				let curr_pct = all_odds[k].participant_odds.filter(item => item.date == take_dates[j]);
+		  				if (curr_pct.length == 1) {data_arr[j].push(curr_pct[0].projection);}
+		  				else {data_arr[j].push(null);}
+		  			}
+		  			else { //if on right day
+		  				data_arr[j].push(all_odds[k].participant_odds[j].projection);
+		  			}
+		  		}
+		  		else {
+		  			data_arr[j].push(all_odds[k].participant_odds[j].projection);
+		  		}
+		  	}
+		  }
+
+		  data.addRows(data_arr);
+
+		  var options = {
+		    hAxis: {
+		      title: 'Date',
+		      textStyle: {color: 'aliceblue'}
+		    },
+		    vAxis: {
+		      title: 'Wins',
+		      format: '###.#',
+		      gridlines: {color: '#3d3d3d'},
+		      textStyle: {color: 'aliceblue'}
+		    },
+		    backgroundColor: 'black',
+		    width: 1000,
+		    height: 650,
+		    legend: {textStyle: {color: 'aliceblue', fontSize: 13, alignment: 'center'}},
+		    chartArea: {backgroundColor: 'black'},
+		    colors: line_chart_colors,
+		    title: chart_title,
+		    titleTextStyle: {color: 'aliceblue', fontSize: 20},
+		  };
+
+		  var chart = new google.charts.Line(document.getElementById('historicalChart'));
+		  chart.draw(data, google.charts.Line.convertOptions(options));
+		}
+	}
+
+	function getTake() {
+		fetch("/api/odds/historical/take/"+document.getElementById("takes").options[document.getElementById("takes").selectedIndex].value)
+		.then(res => res.json())
+		.then(data => {
+			var all_odds = data.all_odds;
+			var xArray = all_odds.map(item => item.participant);
+			var chart_title = data.take;
+		if (data.take != "Regular Season Wins Projections") {
+			donut_on();
+			projection_off();
+			if (xArray[0].includes(",") || xArray.length == 2) {
+				var chart_colors = ["red", "green", "blue", "purple", "gold", "silver","orange", "cyan", "#44D62C", "#3471eb"];
+			}
+			else {
+				var chart_colors = xArray.map(item => team_colors[item]);
+			}
+
+			google.charts.load('current', {'packages':['corechart']});
+			google.charts.setOnLoadCallback(drawChart);
+
+			var take_dates = [...new Set([].concat(...all_odds.map(item => item.participant_odds.map(item2 => item2.date))))].sort();
+
+			function drawChart() {
+				var odds_arr = all_odds.map(item => {
+					//if ((new Date().getTime() - new Date(item.participant_odds[item.participant_odds.length-1].date).getTime())/(1000*60*60*24) <= 1.00012 )
+					if (take_dates[take_dates.length-1] == item.participant_odds[item.participant_odds.length-1].date) 
+					{
+						return [item.participant, item.participant_odds[item.participant_odds.length-1].pct];
+					} else 
+					{
+						return [item.participant, 0];
+					}
+				});
+				
+				odds_arr.unshift(["Team", "Pct"]);
+				var data = google.visualization.arrayToDataTable(odds_arr);
+				var most_recent = new Date(take_dates[take_dates.length-1]);
+
+				var options = {
+				  title: chart_title+' (as of '+(most_recent.getMonth()+1)+'-'+most_recent.getDate()+'-'+most_recent.getFullYear()+')',
+				  pieHole: .4,
+				  backgroundColor: 'black',
+				  titleTextStyle: {color: 'aliceblue', fontSize: 20},
+				  pieSliceBorderColor: 'black',
+				  legend: {textStyle: {color: 'aliceblue'}, maxLines: 3},
+				  width: 700,
+				  height: 500,
+				  chartArea: {left:'10%', top:'10%', height:'100%', width:'100%'},
+				  tooltip: {text: 'percentage'},
+				  colors: chart_colors,
+				};
+
+				var chart = new google.visualization.PieChart(document.getElementById('myChart'));
+				  chart.draw(data, options);
+			}
+
+			
+			if (xArray[0].includes(",") || xArray.length == 2) {
+				var line_chart_colors = ["red", "green", "blue", "purple", "gold", "silver","orange", "cyan", "#44D62C", "#3471eb"];
+			}
+			else {
+				var line_chart_colors = xArray.map(item => line_team_colors[item]);
+			}
+
+			google.charts.load('current', {packages: ['corechart', 'line']});
+			google.charts.setOnLoadCallback(drawCurveTypes);
+
+			function drawCurveTypes() {
+			  var data_arr = [];
+			  var data = new google.visualization.DataTable();
+			  data.addColumn('string', 'Date');
+			  //var take_dates = [...new Set([].concat(...all_odds.map(item => item.participant_odds.map(item2 => item2.date))))].sort();
+			  for (i = 0; i < xArray.length; i++) {
+			  	data.addColumn('number', xArray[i]);
+			  }
+			  for (j = 0; j < take_dates.length; j++) { //# of days
+			  	let current_date = new Date(take_dates[j]);
+			  	data_arr.push([(current_date.getMonth()+1)+'-'+current_date.getDate()+'-'+current_date.getFullYear()]);
+			  	for (k = 0; k < xArray.length; k++) { //# of participants
+			  		if (all_odds[k].participant_odds.length < take_dates.length) { //if participant doesn't have odds for all days
+			  			if (all_odds[k].participant_odds.length <= j || all_odds[k].participant_odds[j].date != take_dates[j]) { //if j > odds length or not on right day
+			  				let curr_pct = all_odds[k].participant_odds.filter(item => item.date == take_dates[j]);
+			  				if (curr_pct.length == 1) {data_arr[j].push(curr_pct[0].pct);}
+			  				else {data_arr[j].push(0);}
+			  			}
+			  			else { //if on right day
+			  				data_arr[j].push(all_odds[k].participant_odds[j].pct);
+			  			}
+			  		}
+			  		else {
+			  			data_arr[j].push(all_odds[k].participant_odds[j].pct);
+			  		}
+			  	}
+			  }
+
+			  data.addRows(data_arr);
+
+			  var options = {
+			    hAxis: {
+			      title: 'Date',
+			      textStyle: {color: 'aliceblue'}
+			    },
+			    vAxis: {
+			      title: 'Probability',
+			      format: '###.#%',
+			      gridlines: {color: '#3d3d3d'},
+			      textStyle: {color: 'aliceblue'}
+			    },
+			    backgroundColor: 'black',
+			    width: 1000,
+			    height: 650,
+			    legend: {textStyle: {color: 'aliceblue', fontSize: 13, alignment: 'center'}},
+			    chartArea: {backgroundColor: 'black'},
+			    colors: line_chart_colors,
+			    title: chart_title,
+			    titleTextStyle: {color: 'aliceblue', fontSize: 20},
+			  };
+
+
+			  var chart = new google.charts.Line(document.getElementById('historicalChart'));
+			  chart.draw(data, google.charts.Line.convertOptions(options));
+			}
+		}
+		else {
+			createProjectionsDonut(all_odds, xArray, chart_title);
+			createProjectionsLine(all_odds, xArray, chart_title);
+		}
+
+		})
+	}
+
+	</script>
+
+	<script>
+		getTake();
+	</script>
+
+
+	<script type="text/javascript" src="/search_bar.js"></script>
+</body>
+</html>

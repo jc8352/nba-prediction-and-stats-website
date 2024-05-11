@@ -1,0 +1,148 @@
+div#record-div {
+	width: 150px;
+	height: 150px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: 2px solid #a142f5;
+	border-radius: 50%;
+}
+
+span#record {
+	font-size: 45px;
+}
+
+div#ptdiff-div, div#team-ppg-div {
+	width: 100px;
+	height: 100px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: 2px solid #04d9ff;
+	border-radius: 50%;
+	margin-left: 20px;
+	transform: translateY(50px);
+}
+
+#ptdiff-div:hover, #team-ppg-div:hover {
+	transform: translateY(50px) scale(1.1);
+	cursor: pointer;
+}
+
+/*
+#record-div:hover {
+	transform: scale(1.1);
+	cursor: pointer;
+}*/
+
+span#team-ppg, span#ptdiff {
+	font-size: 30px;
+}
+
+div#top-line-stats {
+	display: flex;
+	margin-bottom: 20px;
+	margin-top: -20px;
+}
+
+table#players-table {
+	width: 80%;
+	margin: 0 auto;
+	border-collapse: collapse;
+}
+
+td#team-avg {
+	color: grey;
+}
+
+tr#avg-row {
+	/*background-color: #325d63;*/
+	/*background-color: #395061;*/
+	background-color: #252324;
+}
+
+
+#players-table_length {
+	display: none;
+}
+
+div#takes {
+	margin-bottom: 20px;
+}
+
+div#basic-charts /*div#statBarChart*/ {
+	margin: 0 auto;
+}
+
+div#searches-2 {
+	margin-top: -30px;
+}
+
+div#team-charts {
+	display: flex;
+	justify-content: space-around;
+	width: 90%;
+	margin: 0 auto;
+}
+
+#statProgressionChart {
+	display: none;
+}
+
+#teamBarChart {
+	margin: 10px;
+	display: none;
+}
+
+#game-logs-table_wrapper {
+	margin-top: 40px;
+}
+
+#players-table_paginate {
+	display: none;
+}
+
+div#takes span.curr-odds-wins {
+	color: orange;
+}
+
+div#takes span.curr-odds-wins:hover {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+div#basic-charts div#statBarChart {
+	overflow-x: hidden;
+}
+
+@media only screen and (max-width: 600px) {
+	
+	div#top-line-stats {
+		overflow-x: scroll;
+	}
+/*
+	div#stats {
+		margin-bottom: 20px;
+	}
+
+	div#pcts-div {
+		margin-left: 10%;
+	}
+
+	#fgpct-div:hover, #tpct-div:hover, #ftpct-div:hover, #efg-div:hover {
+		transform: translateY(0) scale(1.1);
+		cursor: pointer;
+	}
+
+	div#fgpct-div, div#tpct-div, div#ftpct-div, div#efg-div {
+		transform: translateY(0);
+	}*/
+/*
+	#team-charts {
+		overflow-x: scroll;
+	}*/
+}
+
+
+
+

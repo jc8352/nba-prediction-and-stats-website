@@ -1,0 +1,179 @@
+div#nav-bar {
+	display: flex;
+	justify-content: space-between;
+}
+
+
+div#top-left {
+	display: flex;
+}
+
+div#top-left span {
+	color: grey;
+	font-size: 24px;
+	text-align: center;
+	margin-right: 15px;
+}
+
+div#top-left span a:hover {
+	color: aliceblue;
+}
+
+div#middle {
+	display: flex;
+}
+
+div#top-right {
+	display: flex;
+	flex-direction: row-reverse;
+}
+
+
+div#top-right span {
+	color: grey;
+	font-size: 24px;
+	text-align: center;
+	margin-left: 15px;
+}
+
+div#top-right span a:hover {
+	color: aliceblue;
+}
+
+div#top-right span#sign-in {
+	color: #3471eb;
+}
+
+div#top-right span#logged-in-username {
+	color: gold;
+	font-style: italic;
+}
+
+div#top-right span#logout {
+	color: red;
+}
+
+div#top-right #search {
+
+	height: 25px;
+	width: 0px;
+	margin: 2px;
+	border: none;
+	background-color: black;
+	color: grey;
+	-webkit-transition: width 0.1s ease-in-out;
+		transition: width 0.1s ease-in-out;
+}
+
+div#top-right #search:focus {
+	width: 200px;
+	outline: none;
+}
+
+div#top-right .user-cards {
+	
+	display: none;
+	width: 200px;
+	position: absolute;
+	
+	border: none;
+	background-color: black;
+	
+}
+
+div#top-right .show-cards {
+	display: block;
+	z-index: 1;
+}
+
+div#top-right .search-wrapper {
+	display: flex;
+}
+
+div#top-right .fa {
+  	font-size: 20px;
+ }
+
+div#top-right .fa-search {
+	margin: 2px;
+	height: 30px;
+	color: grey;
+	margin-top: 3.5px;
+}
+
+div#top-right .fa:hover {
+	color: aliceblue;
+}
+
+div#top-right .fa-search:hover {
+	cursor: pointer;
+}
+
+div#top-right .card {
+	background-color: black;
+	height: 20px;
+	font-size: 18px;
+	padding: 3px;
+}
+
+div#top-right .card:hover {
+	/*background-color: rgb(37, 150, 190);*/
+	background-color: #34c3eb;
+	color: aliceblue;
+	cursor: pointer;
+}
+
+div#top-right .hide {
+	display: none;
+}
+
+#logo-container {
+	width: 80px;
+}
+
+#logo {
+	margin-top: -15px;
+	margin-left: -15px;
+}
+
+@media only screen and (max-width: 600px) {
+	div#nav-bar div.user-search-cards {
+  		/*display: none*/
+  }
+
+ div#nav-bar {
+ 	overflow-x: scroll;
+ }
+
+ div#top-right {
+ 	margin-top: 8px;
+ }
+
+ div#top-right .fa-search {
+ 	margin-left: 10px;
+ }
+
+ div#top-right span {
+ 	white-space: nowrap;
+ }
+
+ div#top-left span {
+ 	margin-left: 10px;
+ 	margin-right: 5px;
+ 	margin-top: 8px;
+ }
+
+  #logo-container {
+  	width: 50px;
+  }
+
+  #logo {
+  	height: 65px;
+  	width: 65px;
+  	margin-top: -8px;
+  	margin-left: -8px;
+  }
+
+}
+
+

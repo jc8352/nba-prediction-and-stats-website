@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="/stats.css">
+	<link rel="stylesheet" type="text/css" href="/nav_bar.css">
+	<link rel="stylesheet" type="text/css" href="/default_style.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script
+  		src="https://code.jquery.com/jquery-3.6.1.min.js"
+  		integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+  		crossorigin="anonymous"></script>
+  	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  	<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4083353808185208"
+     crossorigin="anonymous"></script>
+
+    <style>
+		.col-md-6 {
+			/*margin: 0 10%;*/
+			margin-top: 10px;
+			margin-bottom: 10px;
+			margin-left: 10%;
+			margin-right: 10%;
+			color: grey;
+		}
+		.col-md-6 select {
+			background-color: black;
+			border: 2px solid #44D62C;
+			color: aliceblue;
+		}
+		.col-md-6 input {
+			background-color: black;
+			border: 2px solid #44D62C;
+			color: aliceblue;
+			border-radius: 5px;
+			margin-left: 5px;
+			margin-right: 5px;
+			/*margin-bottom: 0px;*/
+		}
+		.col-md-6 input:focus {
+			outline: none;
+		}
+
+		ul.pagination {
+			display: flex;
+			margin-top: 0;
+		}
+		li.paginate_button {
+			list-style-type: none;
+			padding: 5px;
+			border-radius: 5px;
+			color: #c2c4c4;
+		}
+		div.col-md-7 div ul li.active {
+			background-color: #002B75;
+		}
+		.col-md-5 {
+			display: none;
+			margin-left: 15px;
+		}
+		.col-md-7 {
+			margin-right: 30px;
+			margin-top: 15px;
+			float: right;
+		}
+
+		.row:first-of-type {
+			display: flex;
+			justify-content: space-between;
+		}
+	</style>
+	<title>NBA Take Tracker</title>
+</head>
+<body>
+	<div id="nav-bar">
+		<div id= "top-left">
+			<div id="logo-container"><a href="/"><img src='/basketball.jpeg' id='logo' width=100% height=auto></a></div>
+			<span id="users-tab"><a href="/users">Users</a></span>
+			<span id="stats-tab"><a href="/stats">Stats</a></span>
+			<span id="charts-tab"><a href="/charts">Charts</a></span>
+		</div>
+		<div id="middle"></div>
+		<div id= "top-right">
+			<% if (user) { %>
+			<span id= "logout"><a href="/logout">Logout</a></span>
+			<span id= "logged-in-username"><a href=<%= "/users/" + user.id %>><%= user.username %></a></span>
+			<% } else { %>
+			<span id= "sign-in"><a href="/login">Login</a></span>
+			<% } %>
+			<span id='create-take'><a href="/users/createtake">Create Take</a></span>
+			
+			<div class="user-search-cards">
+				<div class="search-wrapper">
+					<i class="fa fa-search"></i>
+					<input type="search" id="search" placeholder="Search Users" data-search>
+				</div>
+				<div class="user-cards" id="user-cards-div" data-user-cards-container>
+					<template data-user-template>
+						<a>
+						<div class="card" data-card>
+							<div class="username" data-username></div>
+						</div>
+						</a>
+					</template>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="tabs">
+		<div id="players-stats-tab" class="tab-select">Player Stats</div>
+		<div id="teams-stats-tab">Team Stats</div>
+		<div id="standings-tab">Standings</div>
+	</div>
+
+	<% function getOnOff(player, team) {
+		const GAME_LENGTH = 48;
+		let total_off_court = team.total_point_differential-player.total_plus_minus;
+		let total_mins_off = (team.games_played*GAME_LENGTH+team.total_ots*5)-player.total_mins;
+
+		let per48_off = total_off_court*(GAME_LENGTH/total_mins_off);
+		let per48_on = player.total_plus_minus*(GAME_LENGTH/player.total_mins);
+
+		return (per48_on-per48_off);
+
+	} %>
+
+	<% function getWinIncrease(player, team) {
+		if (team.games_played == player.games_played) {
+			return "N/A";
+		}
+		let total_wins_without = team.total_wins-player.total_wins;
+		let win_pct_without = total_wins_without/(team.games_played-player.games_played);
+
+		let win_pct_with = player.total_wins/player.games_played;
+
+		return win_pct_with-win_pct_without;
+	} %>
+
+	<div id="general-info">
+		
+	</div>
+
+	<table id="stats-table">
+		<thead>
+			<th class="players-name-col">Name</th>
+			<th>Team</th>
+			<th data-column="1">GP</th>
+			<th data-column="2">MPG</th>
+			<th class="highlight" data-column="3">PPG</th>
+			<th data-column="4">APG</th>
+			<th data-column="5">RPG</th>
+			<th data-column="6">FG%</th>
+			<th data-column="7">3P%</th>
+			<th data-column="8">FT%</th>
+			<th data-column="9">TS%</th>
+			<th data-column="10">EFG%</th>
+			<th data-column="11">TOs</th>
+			<th>On/Off</th>
+			<th>Win%diff</th>
+			<th data-column="12">Techs</th>
+		</thead>
+		<tbody>
+			<% var count = 0 %>
+			<% var class_name %>
+			<% all_players.forEach(function(player) { %>
+			<tr>
+				<td><a href=<%= "/stats/players/"+player._id %> class="player-link"><%= player.name %></a></td>
+				<td><a href=<%= "/stats/teams/"+player.team.split(" ").join("").toLowerCase() %> class="team-link"><%= player.team %></a></td>
+				<td data-column="1"><%= player.games_played %></td>
+				<td data-column="2"><%= (player.total_mins/player.games_played).toFixed(1) %></td>
+				<td data-column="3"><%= (player.total_points/player.games_played).toFixed(1) %></td>
+				<td data-column="4"><%= (player.total_assists/player.games_played).toFixed(1) %></td>
+				<td data-column="5"><%= (player.total_rebounds/player.games_played).toFixed(1) %></td>
+				<td data-column="6"><%= (player.total_fga>0) ? (player.total_fgm/player.total_fga*100).toFixed(1):(0).toFixed(1) %></td>
+				<td data-column="7"><%= (player.total_3sA>0) ? (player.total_3sM/player.total_3sA*100).toFixed(1):(0).toFixed(1) %></td>
+				<td data-column="8"><%= (player.total_fta>0) ? (player.total_ftm/player.total_fta*100).toFixed(1):(0).toFixed(1) %></td>
+				<td data-column="9"><%= (player.total_fga+player.total_fta>0) ? ((player.total_fgm+.5*player.total_3sM+.5*player.total_ftm)/(player.total_fga+.44*player.total_fta)*100).toFixed(1):(0).toFixed(1) %></td>
+				<td data-column="10"><%= (player.total_fga>0) ? ((player.total_fgm+.5*player.total_3sM)/(player.total_fga)*100).toFixed(1):(0).toFixed(1) %></td>
+				<td data-column="11"><%= (player.total_TOs/player.games_played).toFixed(1) %></td>
+				<% let on_off = getOnOff(player, all_teams.find(team => team.name == player.team)).toFixed(1) %>
+				<% if (on_off>0) { 
+						class_name = "positive";
+						on_off = "+"+on_off;
+					}
+					else if (on_off==0) {
+						class_name = "grey";
+					}
+					else {
+						class_name = "negative"
+					}
+				%>
+				<td class=<%= class_name %>><%= on_off %></td>
+				<% let win_increase = getWinIncrease(player, all_teams.find(team => team.name == player.team)) %>
+				<% if (win_increase==0) { 
+						class_name = "grey";
+						win_increase = (win_increase*100).toFixed(1) + "%";
+					}
+					else if (win_increase>0) {
+						class_name = "positive";
+						win_increase = (win_increase*100).toFixed(1);
+						win_increase = "+"+win_increase+"%";
+					}
+					else if (win_increase<0) {
+						win_increase = (win_increase*100).toFixed(1) + "%";
+						class_name = "negative"
+					}
+					else {
+						class_name = "charcoal"
+					}
+				%>
+				<td class=<%= class_name %>><%= win_increase %></td>
+				<td data-column="12"><%= player.total_techs %></td>
+			</tr>
+			<% }) %>
+		</tbody>
+	</table>
+
+	<table id="team-stats-table">
+		<thead>
+			<th></th>
+			<th>Team</th>
+			<th data-column="1">GP</th>
+			<th data-column="2">W</th>
+			<th data-column="3">L</th>
+			<th class="highlight" data-column="4">Win%</th>
+			<th data-column="5">Pt Diff</th>
+			<th data-column="6">PPG</th>
+			<th data-column="7">OPPG</th>
+			<th data-column="8">APG</th>
+			<th data-column="9">RPG</th>
+			<th data-column="10">FGM</th>
+			<th data-column="11">FGA</th>
+			<th data-column="12">FG%</th>
+			<th data-column="13">3PM</th>
+			<th data-column="14">3PA</th>
+			<th data-column="15">3P%</th>
+			<th data-column="16">FTM</th>
+			<th data-column="17">FTA</th>
+			<th data-column="18">FT%</th>
+			<th data-column="19">Techs</th>
+		</thead>
+		<tbody id="team-body">
+			
+		</tbody>
+	</table>
+
+	<div id="standings-tables">
+		<table id="east-standings-table">
+			<thead>
+				<th></th>
+				<th class="standings-name-col">Team</th>
+				<th data-column="1">GP</th>
+				<th data-column="2">W</th>
+				<th data-column="3">L</th>
+				<th data-column="4">Win%</th>
+				<th class="proj-wins-col" data-column="5">Est Wins</th>
+				<th data-column="6">Play-In</th>
+				<th data-column="7">Playoffs</th>
+				<th data-column="8">Win Division</th>
+				<th data-column="9">#1 Seed</th>
+				<th data-column="10">Win Conference</th>
+				<th class="highlight" data-column="11">Championship</th>
+			</thead>
+			<tbody id="east-standings-body">
+				
+			</tbody>
+		</table>
+	</div>
+
+	<script type="text/javascript" src="/datatables.min.js"></script>
+    <script type="text/javascript">
+    	$(document).ready(function () {
+			$('#stats-table').DataTable({
+				columnDefs: [
+					{"orderSequence": ["desc", "asc"], "targets": [2,3,4,5,6,7,8,9,10,11,12,13,14,15]}
+				],
+				order: [[4, 'desc']],
+				pageLength: 50
+			});
+			$('.dataTables_length').addClass('bs-select');
+		});
+    </script>
+
+    <script>
+    	$(function() {
+			var headers = $('table#stats-table thead tr');
+				 
+
+			headers.children().click(function() {
+
+				headers.children().removeClass('highlight');
+			 
+				var index = $(this).prevAll().length;  
+				headers.find(':nth-child(' + (index + 1) + ')').addClass('highlight');
+
+				var column = $(this).attr('data-column');
+				//console.log(column);
+				$('table#stats-table td').removeClass('td-highlight');
+				$('table#stats-table td[data-column='+column+']').addClass('td-highlight');
+			
+
+			});
+		});
+    </script>
+
+	<script type="text/javascript" src="/search_bar.js"></script>
+
+	<script type="text/javascript">
+		fetch('/api/stats/all/generalinfo')
+		.then(res => res.json())
+		.then(info => {
+			let temp = "";
+			temp += "<span>Averages-</span>";
+			temp += "<span>"+"FG%: "+(info[0].fgpct*100).toFixed(1)+"</span>";
+			temp += "<span>"+"3P%: "+(info[0].tppct*100).toFixed(1)+"</span>";
+			temp += "<span>"+"FT%: "+(info[0].ftpct*100).toFixed(1)+"</span>";
+			temp += "<span>"+"TS%: "+(info[0].tspct*100).toFixed(1)+"</span>";
+			temp += "<span>"+"EFG%: "+(info[0].efg*100).toFixed(1)+"</span>";
+
+			document.getElementById("general-info").innerHTML = temp;
+		});
+	</script>
+
+
+	<script type="text/javascript">
+		const full_team_names = {'Heat': 'Miami Heat', 'Lakers': 'Los Angeles Lakers', 'Celtics': 'Boston Celtics', 
+	'Clippers': 'La Clippers', 'Nets': 'Brooklyn Nets', 'Hornets': 'Charlotte Hornets', 'Bulls': 'Chicago Bulls', 
+	'Hawks': 'Atlanta Hawks', 'Suns': 'Phoenix Suns', 'Mavericks': 'Dallas Mavericks', 'Nuggets': 'Denver Nuggets', 
+	'Pistons': 'Detroit Pistons', 'Warriors': 'Golden State Warriors', 'Rockets': 'Houston Rockets', 'Pacers': 'Indiana Pacers', 
+	'Grizzlies': 'Memphis Grizzlies', 'Bucks': 'Milwaukee Bucks', 'Timberwolves': 'Minnesota Timberwolves', 'Pelicans': 'New Orleans Pelicans', 
+	'Knicks': 'New York Knicks', 'Thunder': 'Oklahoma City Thunder', 'Magic': 'Orlando Magic', '76ers': 'Philadelphia 76ers', 'Trail Blazers': 'Portland Trail Blazers', 
+	'Kings': 'Sacramento Kings', 'Spurs': 'San Antonio Spurs', 'Raptors': 'Toronto Raptors', 'Jazz': 'Utah Jazz', 'Cavaliers': 'Cleveland Cavaliers', 'Wizards': 'Washington Wizards'};
+	</script>
+
+	<script type="text/javascript">
+		function constructStandingsTable(teams) {
+			fetch('/api/odds/historical/allteams/seasonodds')
+			.then(res => res.json())
+			.then(all_odds => {
+				let temp = "";
+				let playoff_odds = all_odds.find(participant => participant._id == "Yes").odds;
+				for (i = 0; i < teams.length; i++) {
+					let team_odds = all_odds.find(team => team._id == full_team_names[teams[i].name]).odds;
+					temp += "<tr>"
+					temp += "<td></td>"
+					temp += "<td>"+"<a class='team-link' href="+'/stats/teams/'+teams[i].name.split(" ").join("").toLowerCase()+">"+teams[i].name+"</a>"+"</td>";
+					temp += "<td data-column='1'>"+teams[i].games_played+"</td>";
+					temp += "<td data-column='2'>"+teams[i].total_wins+"</td>";
+					temp += "<td data-column='3'>"+(teams[i].games_played-teams[i].total_wins)+"</td>";
+					temp += "<td data-column='4'>"+(teams[i].total_wins/teams[i].games_played).toFixed(3)+"</td>";
+					let w_projection, playoff_pct;  
+					if (teams[i].name == "Clippers") {
+						w_projection = all_odds.find(team => team._id == "Los Angeles Clippers").odds.find(odd => odd.take == "Regular Season Wins Projections").current_odd.projection.toFixed(1);
+						playoff_pct = (playoff_odds.find(odd => odd.take == "NBA 2022/23 - To Reach the Playoffs - Los Angeles Clippers").current_odd.pct*100).toFixed(1)+"%";
+					}
+					else {
+						w_projection = team_odds.find(odd => odd.take == 'Regular Season Wins Projections').current_odd.projection.toFixed(1);
+						//console.log(playoff_odds.find(odd => odd.take == "NBA 2022/23 - To Reach the Playoffs - "+full_team_names[teams[i].name]));
+						if (playoff_odds.find(odd => odd.take == "NBA 2022/23 - To Reach the Playoffs - "+full_team_names[teams[i].name]) == null) {
+							playoff_pct = "?"
+						}
+						else {
+							playoff_pct = (playoff_odds.find(odd => odd.take == "NBA 2022/23 - To Reach the Playoffs - "+full_team_names[teams[i].name]).current_odd.pct*100).toFixed(1)+"%";
+						}
+					}
+					temp += "<td data-column='5'>"+w_projection+"</td>";
+					temp += "<td data-column='6'>"+(team_odds.find(odd => odd.take.includes("Play-In Tournament")).current_odd.pct*100).toFixed(1)+"%"+"</td>";
+					temp += "<td data-column='7'>"+playoff_pct+"</td>";
+					temp += "<td data-column='8'>"+(team_odds.find(odd => odd.take.includes("NBA 2022/23 - Division")).current_odd.pct*100).toFixed(1)+"%"+"</td>";
+					temp += "<td data-column='9'>"+(team_odds.find(odd => odd.take.includes("Number 1 Seed - Winner")).current_odd.pct*100).toFixed(1)+"%"+"</td>";
+					temp += "<td data-column='10'>"+(team_odds.find(odd => odd.take.includes("Conference - Winner")).current_odd.pct*100).toFixed(1)+"%"+"</td>";
+					temp += "<td data-column='11'>"+(team_odds.find(odd => odd.take == "NBA - Winner").current_odd.pct*100).toFixed(1)+"%"+"</td>";
+					temp += "</tr>"
+				}
+				document.getElementById("east-standings-body").innerHTML = temp;
+
+				$(document).ready(function () {
+					var t3 = $('#east-standings-table').DataTable({
+						columnDefs: [
+							{"orderSequence": ["desc", "asc"], "targets": [2,3,4,5,6,7,8,9,10,11,12]}
+						],
+						order: [[12, 'desc']],
+						pageLength: 50
+					});
+					$('.dataTables_length').addClass('bs-select');
+					t3.on('order.dt search.dt', function() {
+						let i = 1;
+						t3.cells(null, 0, {search: 'applied', order: 'applied'}).every(function (cell) {
+							this.data((i++)+".");
+						});
+					}).draw();
+				});
+
+				$(function() {
+					var headers3 = $('table#east-standings-table thead tr');
+					headers3.children().click(function() {
+						headers3.children().removeClass('highlight');
+					 
+						var index3 = $(this).prevAll().length;  
+						headers3.find(':nth-child(' + (index3 + 1) + ')').addClass('highlight');
+
+						var column3 = $(this).attr('data-column');
+						//console.log(column3);
+						$('table#east-standings-table td').removeClass('td-highlight');
+						$('table#east-standings-table td[data-column='+column3+']').addClass('td-highlight');
+					});
+
+				});
+			})
+		}
+	</script>
+
+	<script type="text/javascript">
+		fetch('/api/stats/teams/gen')
+		.then(res => res.json())
+		.then(teams => {
+			let temp = "";
+			for (i = 0; i < teams.length; i++) {
+				temp += "<tr>";
+				temp += "<td></td>";
+				temp += "<td>"+"<a class='team-link' href="+'/stats/teams/'+teams[i].name.split(" ").join("").toLowerCase()+">"+teams[i].name+"</a>"+"</td>";
+				temp += "<td data-column='1'>"+teams[i].games_played+"</td>";
+				temp += "<td data-column='2'>"+teams[i].total_wins+"</td>";
+				temp += "<td data-column='3'>"+(teams[i].games_played-teams[i].total_wins)+"</td>";
+				temp += "<td data-column='4'>"+(teams[i].total_wins/teams[i].games_played).toFixed(3)+"</td>";
+				let pt_diff_class = (teams[i].total_point_differential>0) ? "positive":(teams[i].total_point_differential==0) ? "grey":"negative";
+				let pt_diff_str = (teams[i].total_point_differential>0) ? "+"+(teams[i].total_point_differential/teams[i].games_played).toFixed(1):(teams[i].total_point_differential/teams[i].games_played).toFixed(1);
+				temp += "<td data-column='5' class="+pt_diff_class+">"+pt_diff_str+"</td>";
+				temp += "<td data-column='6'>"+(teams[i].total_points/teams[i].games_played).toFixed(1)+"</td>";
+				temp += "<td data-column='7'>"+((teams[i].total_points-teams[i].total_point_differential)/teams[i].games_played).toFixed(1)+"</td>";
+				temp += "<td data-column='8'>"+(teams[i].total_assists/teams[i].games_played).toFixed(1)+"</td>";
+				temp += "<td data-column='9'>"+(teams[i].total_rebounds/teams[i].games_played).toFixed(1)+"</td>";
+				temp += "<td data-column='10'>"+(teams[i].total_fgm/teams[i].games_played).toFixed(1)+"</td>";
+				temp += "<td data-column='11'>"+(teams[i].total_fga/teams[i].games_played).toFixed(1)+"</td>";
+				temp += "<td data-column='12'>"+(teams[i].total_fgm/teams[i].total_fga*100).toFixed(1)+"</td>";
+				temp += "<td data-column='13'>"+(teams[i].total_3sM/teams[i].games_played).toFixed(1)+"</td>";
+				temp += "<td data-column='14'>"+(teams[i].total_3sA/teams[i].games_played).toFixed(1)+"</td>";
+				temp += "<td data-column='15'>"+(teams[i].total_3sM/teams[i].total_3sA*100).toFixed(1)+"</td>";
+				temp += "<td data-column='16'>"+(teams[i].total_ftm/teams[i].games_played).toFixed(1)+"</td>";
+				temp += "<td data-column='17'>"+(teams[i].total_fta/teams[i].games_played).toFixed(1)+"</td>";
+				temp += "<td data-column='18'>"+(teams[i].total_ftm/teams[i].total_fta*100).toFixed(1)+"</td>";
+				temp += "<td data-column='19'>"+teams[i].total_techs+"</td>";
+				temp += "</tr>"
+			}
+			document.getElementById("team-body").innerHTML = temp;
+
+			$(document).ready(function () {
+				var t2 = $('#team-stats-table').DataTable({
+					columnDefs: [
+						{"orderSequence": ["desc", "asc"], "targets": [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]}
+					],
+					order: [[5, 'desc']],
+					pageLength: 50
+				});
+				$('.dataTables_length').addClass('bs-select');
+				t2.on('order.dt search.dt', function() {
+					let i = 1;
+					t2.cells(null, 0, {search: 'applied', order: 'applied'}).every(function (cell) {
+						this.data((i++)+".");
+					});
+				}).draw();
+			});
+
+			$(function() {
+				var headers2 = $('table#team-stats-table thead tr');
+				headers2.children().click(function() {
+					headers2.children().removeClass('highlight');
+				 
+					var index2 = $(this).prevAll().length;  
+					headers2.find(':nth-child(' + (index2 + 1) + ')').addClass('highlight');
+
+					var column2 = $(this).attr('data-column');
+					//console.log(column2);
+					$('table#team-stats-table td').removeClass('td-highlight');
+					$('table#team-stats-table td[data-column='+column2+']').addClass('td-highlight');
+				});
+
+			});
+
+			constructStandingsTable(teams);
+		});
+	</script>
+
+	<script type="text/javascript">
+		document.getElementById("teams-stats-tab").addEventListener("click", showTeams);
+
+		function showTeams() {
+			if (document.getElementById("team-stats-table_wrapper").style.display != 'block') {
+				document.getElementById("stats-table_wrapper").style.display = 'none';
+				document.getElementById("players-stats-tab").classList.remove("tab-select");
+				document.getElementById("standings-tables").style.display = 'none';
+				document.getElementById("standings-tab").classList.remove("tab-select");
+				document.getElementById("team-stats-table_wrapper").style.display = 'block';
+				document.getElementById("teams-stats-tab").classList.add("tab-select");
+			}
+		}
+
+		document.getElementById("players-stats-tab").addEventListener("click", showPlayers);
+
+		function showPlayers() {
+			if (document.getElementById("stats-table_wrapper").style.display != 'block') {
+				document.getElementById("team-stats-table_wrapper").style.display = 'none';
+				document.getElementById("teams-stats-tab").classList.remove("tab-select");
+				document.getElementById("standings-tables").style.display = 'none';
+				document.getElementById("standings-tab").classList.remove("tab-select");
+				document.getElementById("stats-table_wrapper").style.display = 'block';
+				document.getElementById("players-stats-tab").classList.add("tab-select");
+			}
+		}
+
+		document.getElementById("standings-tab").addEventListener("click", showStandings);
+
+		function showStandings() {
+			if (document.getElementById("standings-tables").style.display != 'block') {
+				document.getElementById("team-stats-table_wrapper").style.display = 'none';
+				document.getElementById("teams-stats-tab").classList.remove("tab-select");
+				document.getElementById("stats-table_wrapper").style.display = 'none';
+				document.getElementById("players-stats-tab").classList.remove("tab-select");
+				document.getElementById("standings-tables").style.display = 'block';
+				document.getElementById("standings-tab").classList.add("tab-select");
+			}
+		}
+	</script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="/membertakes.css">
+		<link rel="stylesheet" type="text/css" href="/nav_bar.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<script
+  			src="https://code.jquery.com/jquery-3.6.1.min.js"
+  			integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+  			crossorigin="anonymous"></script>
+
+  		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  		<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4083353808185208"
+     crossorigin="anonymous"></script>
+		<title>NBA Take Tracker</title>
+	</head>
+	<body>
+		<div id="nav-bar">
+			<div id= "top-left">
+				<div id="logo-container"><a href="/"><img src='/basketball.jpeg' id='logo' width=100% height=auto></a></div>
+				<span id="users-tab"><a href="/users">Users</a></span>
+				<span id="stats-tab"><a href="/stats">Stats</a></span>
+				<span id="charts-tab"><a href="/charts">Charts</a></span>
+			</div>
+			<div id="middle"></div>
+			<div id= "top-right">
+				<% if (user_info) { %>
+				<span id= "logout"><a href="/logout">Logout</a></span>
+				<span id= "logged-in-username"><a href=<%= "/users/" + user_info.id %>><%= user_info.username %></a></span>
+				<% } else { %>
+				<span id= "sign-in"><a href="/login">Login</a></span>
+				<% } %>
+				<span id='create-take'><a href="/users/createtake">Create Take</a></span>
+
+				<div class="user-search-cards">
+					<div class="search-wrapper">
+						<i class="fa fa-search"></i>
+						<input type="search" id="search" placeholder="Search Users" data-search>
+					</div>
+					<div class="user-cards" id="user-cards-div" data-user-cards-container>
+						<template data-user-template>
+							<a>
+							<div class="card" data-card>
+								<div class="username" data-username></div>
+							</div>
+							</a>
+						</template>
+					</div>
+				</div>
+			</div>
+		</div>
+		<h1><%= user.username %></h1>
+		<div id="pfp-container">
+			<% if (user_info && user_info.id == user._id) { %>
+			<div id="left-pfp"></div>
+			<% } %>
+			<img src=<%= "https://pfp-images.s3.us-west-1.amazonaws.com/" + user.pfp %> id='pfp' width='140px' height='140px'>
+			<% if (user_info && user_info.id == user._id) { %>
+			<button id="add-pfp">+</button>
+			<% } %>
+		</div>
+		<% var class_name %>
+		<% var class_name_2 %>
+		<% var ttpct = user.tt_pct %>
+		<% var pct_gain = user.pct_gain %>
+		<% class_name = "even" %>
+			<% if (ttpct < .5) {
+				class_name = "negative"
+				} else if (ttpct > .5) {
+				class_name = "positive"	} %>
+		<h4>True Take Percentage: <span class=<%= class_name %>><%= (ttpct*100).toFixed(1) %>%</span></h4>
+		<% class_name_2 = "even" %>
+		<% let pct_str = "0.0%" %>
+			<% if (pct_gain < 0) {
+				pct_str = "↓"+(pct_gain*100).toFixed(1)+"%"
+				class_name_2 = "negative"}
+				else if (pct_gain > 0) {
+					pct_str = "↑"+(pct_gain*100).toFixed(1)+"%"
+					class_name_2 = "positive"} %>
+		<h4>Percent Gain: <span class=<%= class_name_2 %>><%= pct_str %></span></h4>
+		<div id="follow-info" class="final">
+			<h5 id="followers">Followers: <a href=<%= "/users/"+user.id+"/followlists"%>><span id="total-followers"><%= user.followers %></span></a></h5>
+			<h5 id="following">Following: <a href=<%= "/users/"+user.id+"/followlists"%>><span id="total-following"><%= user.following %></span></a></h5>
+		</div>
+
+		<% if (user_info.id != user._id) { %>
+			<div id="follow-button" class="final"><p>Follow</p></div>
+			<div id="unfollow-button" class="final"><p>Unfollow</p></div>
+		<% } %>
+
+		<% if (user_info.id == user._id) { %>
+			<div id="clear-takes-button" class="final clear-takes-button-class"><p>Clear Takes</p><span id="reset-tooltip-span" class="tooltiptext-middle"><%= "Next reset: "+new Date(user.take_reset_date).toLocaleString('en-us', {timeZone: 'America/New_York'}) %></span></div>
+			<div id="cleared-msg"></div>
+		<% } %>
+
+
+		<% var right = user.right %>
+		<% var total = user.total_takes %>
+		<% var wrong = user.wrong %>
+		<% var gain = user.money_gain %>
+		<div id="summary">
+			<p class="gen-info">Total takes: <span id="total-takes" style="color:orange"><%= total %></span></p>
+			<p class="gen-info">Overall record: <span id="overall-record" style="color: #a142f5"><%= right %>-<%= wrong %></span></p>
+			<p class="gen-info" id="overall-pct-div">Overall true take %: <span id="overall-pct" class=<%= class_name %>><%= (ttpct*100).toFixed(1) %>%</span></p>
+			<% let gain_str = "$0.00" %>
+			<% class_name = "even" %>
+			<% if (gain < 0) {
+				gain_str = "-$"+(gain*-1).toFixed(2)
+				class_name = "negative"}
+				else if (gain > 0) {
+					gain_str = "$"+(gain).toFixed(2)
+					class_name = "positive"} %>
+			<p class="gen-info">Overall money gain: <span id="overall-gain" class=<%= class_name %>><%= gain_str %></span></p>
+			<p class="gen-info" id="overall-pct-gain-div">Overall percent gain: <span id="pct-gain" class=<%= class_name_2 %>><%= pct_str %></span></p>
+		</div>
+
+		<div id="mobile-rotate">*rotate device for take explanations</div>
+
+		<% var takes_list = user.takes %>
+		<% function sorting_helper(a, b) {
+			if (a.date.getTime() > b.date.getTime()) {
+				return 1
+			}
+			else {
+				return -1
+			}
+		} %>
+
+		<% function getDateString(take_obj) {
+			var hours = take_obj.date.getHours();
+			var minutes = take_obj.date.getMinutes();
+			minutes = minutes < 10 ? ("0"+minutes):minutes;
+			if (hours > 12) {
+				hours = hours%12;
+				return (take_obj.date.getMonth() + 1)+"-"+take_obj.date.getDate()+"-"+
+					take_obj.date.getFullYear()+"\n"+hours+":"+minutes+" PM";
+			}
+			else if (hours == 12) {
+				return (take_obj.date.getMonth() + 1)+"-"+take_obj.date.getDate()+"-"+
+					take_obj.date.getFullYear()+"\n"+hours+":"+minutes+ " PM";
+			}
+			else if (hours == 0) {
+				return (take_obj.date.getMonth() + 1)+"-"+take_obj.date.getDate()+"-"+
+					take_obj.date.getFullYear()+"\n"+"12"+":"+minutes+ " AM";
+			}
+			return (take_obj.date.getMonth() + 1)+"-"+take_obj.date.getDate()+"-"+
+					take_obj.date.getFullYear()+"\n"+take_obj.date.getHours()+":"+minutes+ " AM";
+
+		} %>
+
+
+		<% takes_list.sort((a, b) => sorting_helper(a,b)) //sort list of takes by date%> 
+		<div id="table">
+			<% if (takes_list != null) { %>
+			<table id="takes-table">
+			<thead>
+				<tr class='toprow'>
+					<th onclick="sortTable(0, 'asc')" class='take'>Take</th>
+					<th onclick="sortTable(1, 'asc')" class='date highlight'>Date</th>
+					<th onclick="sortTable(2, 'desc')" class='odds'>Odds</th>
+					<th onclick="sortTable(3, 'asc')" class='result'>Result</th>
+					<th onclick="sortTable(4, 'asc')" class='explanation'>Explanation</th>
+					<th onclick="sortTable(5, 'desc')" class='record'>Record</th>
+					<th onclick="sortTable(6, 'desc')" class='ttpct'>TT%</th>
+					<th onclick="sortTable(7, 'desc')" class='gain'>Gain</th>
+					<th onclick="sortTable(8, 'desc')" class='overall'>Overall</th>
+				</tr>
+			</thead>
+				<% var curr_right = 0 %>
+				<% var curr_total = 0 %>
+				<% var curr_ttpct = 0 %>
+				<% var in_progress = 0 %>
+				<% var odds_string %>
+				<% var gain = 0 %>
+				<% var total_gain = 0 %>
+				<% var result_string, gain_string, t_gain_string %>
+				<% t_gain_string = "$0.00" %>
+				<% const BET_VALUE = 50 %>
+				<% class_name = "grey" %>
+			<tbody id= "takes-table-body">
+				<% for (i = 0; i < takes_list.length; i++) { //populate table rows with takes%>
+				<tr>
+					<td><p><%= user.total_takes-curr_total-in_progress %>. <%= takes_list[i].take.description %></p></td>
+					<% let date_str = takes_list[i].date.toLocaleString('en-us', {timeZone: 'America/New_York'}).split(" ") %>
+					<% date_str[1] = date_str[1].slice(0,-3) %>
+					<% date_str = date_str.join(" ") %>
+					<td><%= date_str//getDateString(takes_list[i]) //Date %></td>
+
+					<% 	if (takes_list[i].take.odds > 0) 
+							{odds_string = "+" + takes_list[i].take.odds}
+						else if (takes_list[i].odds == 0) 
+							{odds_string = "N/A"}
+						else 
+							{odds_string = takes_list[i].take.odds} %>
+
+					<td><%= odds_string //Odds %></td>
+
+				<% if (!(takes_list[i].result == "A")) { %>
+					<% if (takes_list[i].result == "W") 
+							{result_string = "Right"; class_name = "green"}
+						else if (takes_list[i].result == "L")
+							{result_string = "Wrong"; class_name = "red"} 
+						else {result_string = "---"; class_name = "even"}%>
+
+					<td class=<%= class_name %>><%= result_string //Result %></td>
+					<td class="explan-col"><%= takes_list[i].explanation //Explanation %></td>
+
+					<% curr_total += 1 %>
+					<% curr_right += (takes_list[i].result == "W") ? 1:0 %>
+
+					<td><%= curr_right %>-<%= curr_total-curr_right //Record %></td>
+					<td><%= (curr_right/curr_total*100).toFixed(1)//Correct Pct %>%</td>
+
+					<% var correct = (takes_list[i].result == "W") ? 1:0 %>
+					<% gain = takes_list[i].take_gain %>
+					<% class_name = "grey" %>
+					<% gain_string = "$0.00" %>
+					<% if (gain < 0) {class_name = "red"; 
+										gain_string = "-$"+((gain*-1).toFixed(2))}
+						else if (gain > 0) {class_name = "green"; 
+										gain_string = "+$"+gain.toFixed(2)}%>
+
+					<td class=<%= class_name %>><%= gain_string //Take gain %></td>
+
+					<% class_name = "grey" %>
+					<% t_gain_string = "$0.00" %>
+					<% total_gain += gain %>
+					<% if (total_gain < 0) {class_name = "red"; 
+										t_gain_string = "-$"+((total_gain*-1).toFixed(2))}
+						else if (total_gain > 0) {class_name = "green"; 
+										t_gain_string = "$"+total_gain.toFixed(2)}%>
+
+					<td class=<%= class_name %>><%= t_gain_string //Total gain %></td>
+				<% } else { %>
+					<td class="grey">In Progress</td>
+					<% in_progress++ %>
+					<td class="explan-col"><%= takes_list[i].explanation //Explanation %></td>
+					<td><%= curr_right %>-<%= curr_total-curr_right //Record %></td>
+					<% curr_ttpct = (curr_total>0) ? (curr_right/curr_total) : 0 %>
+					<td><%= (curr_ttpct*100).toFixed(1)//Correct Pct %>%</td>
+
+					<% if (takes_list[i].take.odds < 0) {
+						gain = BET_VALUE/(takes_list[i].take.odds/100)*-1;
+					}
+					else if (takes_list[i].take.odds == 0) {
+						gain = 0
+					}
+					else {
+						gain = takes_list[i].take.odds/100*BET_VALUE
+					} %>
+					<% gain_string = "+$"+gain.toFixed(2) %>
+
+					<td class="grey"><%= gain_string %></td>
+					<td class=<%= class_name %>><%= t_gain_string //Total gain %></td>
+				<% } %>
+				</tr>
+				<% } %>
+			</tbody>
+			</table>
+			<% } %>
+		</div>
+
+		<script type="text/javascript" src= "/user_profiles.js"></script>
+
+		<script>
+			reverseDates();
+		</script>
+
+		<script>
+			$(function() {
+  				var headers = $('table thead tr');
+  				//var rows = $('table tbody tr');  
+
+  				headers.children().click(function() {
+
+    			headers.children().removeClass('highlight');
+    			//rows.children().removeClass('highlight');  
+    			var index = $(this).prevAll().length;  
+    			headers.find(':nth-child(' + (index + 1) + ')').addClass('highlight');
+    			//if (index == 1 || index == 2 || index == 5 || index == 6) {
+    			//	rows.find(':nth-child(' + (index + 1) + ')').addClass('highlight');
+    			//}
+
+  				});
+			});
+		</script>
+
+		<script>
+			if (document.getElementById("add-pfp") != null) {
+				document.getElementById("add-pfp").onclick = function () {
+					window.location.href = "/users/upload/pfp";
+				};
+			}
+		</script>
+
+		<script type="text/javascript" src="/search_bar.js"></script>
+
+		<script type="text/javascript">
+			if ('<%= user_info %>' != 'false' && '<%= user_info.id %>' != '<%= user._id %>') {
+				fetch("/users/check/following/"+ '<%= user_info.id %>'+'/'+'<%= user._id%>')
+				.then(res => res.json())
+				.then(bool => {
+					if (bool.found == true) {
+						document.getElementById("follow-button").style.display = 'none';
+						document.getElementById("unfollow-button").style.display = 'block';
+					}
+					else {
+						document.getElementById("follow-button").style.display = 'block';
+						document.getElementById("unfollow-button").style.display = 'none';
+					}
+				});
+			}
+			else if ('<%= user_info %>' == 'false') {
+				document.getElementById("follow-button").style.display = 'block';
+				document.getElementById("unfollow-button").style.display = 'none';
+			}
+
+			document.getElementById("follow-button").addEventListener("click", follow);
+			function follow(e) {
+				if ('<%= user_info %>' != 'false') {
+					e.preventDefault();
+					const formData = new FormData();
+					formData.append("currid", '<%= user_info.id %>');
+					formData.append("curruser", '<%= user_info.username %>');
+					formData.append("followid", '<%= user._id %>');
+					formData.append("username", '<%= user.username %>');
+					fetch("/users/follow", {
+						method: 'PUT',
+						body: formData
+					})
+					let followers = document.getElementById("total-followers");
+					followers.innerHTML = parseInt(followers.innerHTML)+1;
+					if (document.getElementById("follow-button").style.display != 'none') {
+						document.getElementById("follow-button").style.display = 'none';
+						document.getElementById("unfollow-button").style.display = 'block';
+					}
+				}
+				else {
+					window.location.href = '/login';
+				}
+			}
+			document.getElementById("unfollow-button").addEventListener("click", unfollow);
+			function unfollow(e) {
+				if ('<%= user_info %>' != 'false') {
+					e.preventDefault();
+					const formData = new FormData();
+					//formData.append("currid", '<%= user_info.id %>');
+					//formData.append("curruser", '<%= user_info.username %>');
+					formData.append("unfollowid", '<%= user._id %>');
+					formData.append("username", '<%= user.username %>');
+					fetch("/users/unfollow", {
+						method: 'PUT',
+						body: formData
+					})
+					let followers = document.getElementById("total-followers");
+					followers.innerHTML = parseInt(followers.innerHTML)-1;
+					if (document.getElementById("unfollow-button").style.display != 'none') {
+						document.getElementById("unfollow-button").style.display = 'none';
+						document.getElementById("follow-button").style.display = 'block';
+					}
+				}
+				else {
+					window.location.href = '/login';
+				}
+			}
+		
+		</script>
+
+		<script type="text/javascript">
+			document.getElementById("clear-takes-button").addEventListener("click", clearTakes);
+
+			var next_reset = new Date("<%= user.take_reset_date %>");
+			function clearTakes(e) {
+				e.preventDefault();
+				if (next_reset < new Date()) {
+					fetch("/api/users/takes/all/clear", {
+							method: 'PUT',
+					})
+					next_reset = new Date();
+					next_reset.setDate(next_reset.getDate()+14);
+					document.getElementById("cleared-msg").innerHTML = "Takes cleared. Next reset available at "+next_reset.toLocaleString('en-us', {timeZone: 'America/New_York'});
+					document.getElementById("takes-table-body").innerHTML = "";
+					document.getElementById("cleared-msg").style.color = "#44D62C";
+					document.getElementById("reset-tooltip-span").innerHTML = "Next reset: "+next_reset.toLocaleString('en-us', {timeZone: 'America/New_York'});
+				}
+				else {
+					document.getElementById("cleared-msg").innerHTML = "Takes not cleared. Next reset available at "+next_reset.toLocaleString('en-us', {timeZone: 'America/New_York'});
+					document.getElementById("cleared-msg").style.color = "grey";
+				}
+				document.getElementById("cleared-msg").style.display = "block";
+			}
+		</script>
+
+	</body>
+</html>

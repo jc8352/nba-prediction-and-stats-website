@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script
+  			src="https://code.jquery.com/jquery-3.6.1.min.js"
+  			integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+  			crossorigin="anonymous"></script>
+	<style>
+	body {
+		background-color: black;
+		color: aliceblue;
+		text-align: center;
+		overflow: scroll;
+	}
+
+	form#new-take-form input#new-take {
+		width: 60%;
+	}
+	form#new-take-form {
+		margin-top: 200px;
+	}
+	input#new-take {
+		background-color: black;
+		color: aliceblue;
+		padding: 12px 20px;
+		/*margin: 8px 0;*/
+		margin-top: 8px;
+		margin-bottom: 0;
+		border: 2px solid #44D62C;
+		border-radius: 4px;
+		font-size: 18px;
+	}
+
+	input#new-take:focus {
+		outline: none;
+	}
+
+	input#submit-btn {
+		background-color: #3471eb;
+		border: none;
+		color: aliceblue;
+		padding: 12px 20px;
+		margin: 8px 0;
+		font-size: 18px;
+		cursor: pointer;
+	}
+
+	input#submit-btn:hover {
+		transform: scale(1.04);
+	}
+
+	form#new-take-form label#take-label {
+		font-size: 20px;
+	}
+
+	#error {
+		color: red;
+		font-size: 12px;
+		margin-bottom: 5px;
+		margin-top: -5px;
+	}
+
+	.card {
+		width: 70%;
+		height: 30px;
+		margin: 0 auto;
+		font-size: 18px;
+	}
+
+	.card:hover {
+		background-color: rgb(37, 150, 190);
+		cursor: pointer;
+	}
+
+	.card .take {
+		padding: 5px 0;
+	}
+
+	.highlight {
+		background-color: rgb(37, 150, 190);
+	}
+
+	.hide {
+		display: none;
+	}
+
+	@media only screen and (max-width: 600px) {
+		form#new-take-form label#take-label {
+			font-size: 15px;
+		}
+
+		form#new-take-form input#new-take {
+			width: 80%;
+			font-size: 10.5px;
+			padding: 8px 5px;
+		}
+		.card {
+			width: 100%;
+			height: 20px;
+			font-size: 10.5px;
+			margin: 0 auto;
+		}
+		input#submit-btn {
+			padding: 8px 5px;
+			font-size: 10.5px;
+		}
+	}
+
+	</style>
+	<title>NBA Take Tracker</title>
+</head>
+<body>
+	<form id="new-take-form">
+		<label for="new-take" id="take-label">Search for take:</label>
+		<br>
+		<input name="new-take" id="new-take" autocomplete="off" data-search required>
+
+		<input type="submit" id="submit-btn">
+		<div id="error"></div>
+
+		<div class="user-cards" id="user-cards-div" data-takes-container>
+			<template data-take-template>
+				<div class="card" data-card>
+					<div class="take" data-take></div>
+				</div>
+			</template>
+		</div>
+			
+	</form>
+
+	<script>
+		const form = document.getElementById("new-take-form");
+
+		form.addEventListener("submit", submitForm);
+
+		function submitForm(e) {
+		    e.preventDefault();
+		    const new_take = document.getElementById("new-take");
+		    const formData = new FormData();
+		    formData.append("new_take", new_take.value);
+		    fetch("/api/usertake", {
+		        method: 'POST',
+		        body: formData,
+		     
+		    })
+		       .then(function(res) {
+		       		return res.text();
+  			}).then(function(data) {
+    				if (data == "duplicate") {
+    					document.getElementById("error").innerHTML = "*take already exists";
+    				}
+    				else if (data == "take not found") {
+    					document.getElementById("error").innerHTML = "*take not found. enter take from list";
+    				}
+    				else if (data == "too late, past game time") {
+    					document.getElementById("error").innerHTML = "*too late, past game time";
+    				}
+    				else {
+			       		window.location.href = "/users/" + data;
+    				}
+		       })
+		       .catch((err) => ("Error occured", err));
+		}
+	</script>
+
+	<script>
+		const userCardTemplate = document.querySelector("[data-take-template]");
+		const userCardContainer = document.querySelector("[data-takes-container");
+		const searchInput = document.querySelector("[data-search]");
+		const takeCard = document.querySelector("[data-card]");
+
+		const AWS_UTC_SHIFT = 4;
+		var time = new Date();
+		//time.setHours(time.getHours()-AWS_UTC_SHIFT);
+		var date;
+
+		let takes = [];
+
+		fetch("/api/tipico/odds")
+		.then(res => res.json())
+		.then(data => {
+			takes = data.map(odd => {
+				if (odd.event_date) {
+					date = new Date(odd.event_date);
+					if (date.getTime() > time.getTime()) {
+						const card = userCardTemplate.content.cloneNode(true).children[0];
+						const take = card.querySelector("[data-take]");
+						take.textContent = odd.description;
+						userCardContainer.append(card);
+						return { description: odd.description, element: card };
+					}
+					else {
+						return { description: null };
+					}
+				} else if (odd.length == "season") {
+					const card = userCardTemplate.content.cloneNode(true).children[0];
+					const take = card.querySelector("[data-take]");
+					take.textContent = odd.description;
+					userCardContainer.append(card);
+					return { description: odd.description, element: card };
+				}
+			})
+			console.log(takes);
+		})
+
+		var cards = 0;
+
+		searchInput.addEventListener("input", e => {
+			const value = e.target.value;
+			cards = document.getElementsByClassName("card").length;
+			takes.forEach(take => {
+				if (take.description != null) {
+					const isVisible = (take.description.toLowerCase()).includes(value.toLowerCase());
+					take.element.classList.toggle("hide", !isVisible);
+				}
+			})
+		})
+
+		$(document).on('mousedown', '#user-cards-div div div', function (e) {
+			e.preventDefault();
+			document.getElementById("new-take").value = e.target.innerHTML;
+			$('#user-cards-div div div').removeClass('highlight');
+			$(this).addClass('highlight');
+			return false;
+		});
+
+	</script>
+
+</body>
+</html>

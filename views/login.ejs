@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		body {
+		    background-color: black;
+		}
+		* {
+		    box-sizing: border-box;
+		}
+		.container {
+		    max-width: 500px;
+		    margin: 60px auto;
+		    border-radius: 5px;
+		    border: 2px solid #44D62C;
+		    color: black;
+		}
+		.container #form h1 {
+		    text-align: center;
+		    color: green;
+		    margin: 0px;
+		}
+		form {
+		    background-color: black;
+		    padding-top: 30px;
+		    padding-left: 30px;
+		    padding-right: 30px;
+		    padding-bottom: 10px;
+		}
+		form .input {
+		    margin-bottom: 15px;
+		}
+		form label {
+		    display: block;
+		    margin-bottom: 10px;
+		    color: aliceblue;
+		}
+		form input {
+		    padding: 12px 12px;
+		    width: 100%;
+		    border: 1px solid #ccc;
+		    background-color: black;
+		    color: aliceblue;
+		    border-radius: 2px;
+		}
+		.login-btn {
+		    width: 100%;
+		    border: none;
+		    background-color: #3471eb;
+		    font-size: 18px;
+		    color: aliceblue;
+		    border-radius: 3px;
+		    padding: 20px;
+		    text-align: center;
+		    cursor: pointer;
+		    margin-top: 5px;
+		}
+
+		p#signup {
+			margin-top: 10px;
+			text-align: center;
+			font-size: 16px;
+		}
+
+		p#signup:hover {
+			cursor: pointer;
+		}
+
+		a {
+			color: aliceblue;
+		}
+
+		#invalid-login {
+			color: red;
+			font-size: 12px;
+			margin-bottom: 5px;
+			margin-top: -10px;
+		}
+
+	</style>
+	<title>NBA Take Tracker</title>
+</head>
+<body>
+    <div class="container">
+        <form id='login-form'>
+            <div class="input">
+                <label for='username'>Username (case sensitive)</label>
+                <input name='username' id='username' placeholder='Username' maxlength='20' required autofocus>
+            </div>
+            <div class="input">
+                <label for='password'>Password</label>
+                <input name= 'password' id='password' type="text" placeholder="Password" maxlength='20' required>
+            </div>
+            <div id="invalid-login"></div>
+            <button class="login-btn" type="submit">Login</button>
+            <p id="signup"><a href="/signup">Or Signup</a></p>
+        </form>
+    </div>
+
+    <script>
+		const form = document.getElementById("login-form");
+
+		form.addEventListener("submit", submitForm);
+
+		function submitForm(e) {
+			
+		    e.preventDefault();
+		    
+		    const username = document.getElementById("username");
+		    const password = document.getElementById("password");
+		    const formData = new FormData();
+		    formData.append("username", username.value);
+		    formData.append("password", password.value);
+		    fetch("/api/login", {
+		        method: 'POST',
+		        body: formData,
+		       
+		    })
+			    .then(function(res) { return res.text();
+			       }).then(function(data) {
+			       		if (data != "valid login") {
+			       			document.getElementById("invalid-login").innerHTML = "*bad username or password";
+			       		}
+			       		else {
+			       			window.location.href='/';
+			       		}
+			       })
+			       					
+			       .catch((err) => ("Error occured", err));
+			}
+	
+
+	</script>
+
+</body>
+</html>

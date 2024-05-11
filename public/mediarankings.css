@@ -1,0 +1,392 @@
+img {
+	border-radius: 8px;
+}
+
+a {
+	text-decoration: none;
+	color: inherit;
+}
+
+.name:hover {
+	text-decoration: underline;
+}
+
+.member-images:hover {
+	transform: scale(1.12);
+}
+
+th, td {
+	border-bottom: 1px solid #ddd;
+}
+
+td {
+	height: 70px;
+}
+
+th {
+	height: 10px;
+	padding-bottom: 25px;
+	padding-top: 0px;
+	color: #c2c4c4;
+}
+
+th.member {
+	width: 30%;
+}
+
+th.ttpct, th.record, th.pct-gain, th.money {
+	width: 10%;
+	text-align: left;
+}
+
+th.active {
+	width: 10%;
+	text-align: center;
+}
+
+th.rank {
+	width: 20%;
+}
+
+.active-col {
+	text-align: center;
+}
+
+
+#table #takepct-table .toprow {
+	height: 5px;
+}
+
+#table table#takepct-table{
+	width: 80%;
+	border-collapse: collapse;
+	margin: 0 auto;
+	margin-top: 5px;
+}
+
+h1 {
+	text-align: center;
+	margin-top: 5px;
+	margin-bottom: 15px;
+}
+
+tbody tr:hover {
+	background-color: #cffafa;
+	color: black;
+	opacity: .95;
+}
+
+
+
+body {
+	background: black;
+	color: #c7c5c5;
+	font-size: 20px;
+	
+}
+
+th:hover {
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.negative {
+	color: #D22730;
+}
+
+.positive {
+	color: #44D62C;
+}
+
+.zero {
+	color: grey;
+}
+
+.rank {
+	position: relative;
+}
+
+.member {
+	position: relative;
+}
+
+.active {
+	position: relative;
+}
+
+.record {
+	position: relative;
+}
+
+.money {
+	position: relative;
+}
+
+.pct-gain {
+	position: relative;
+}
+
+.ttpct {
+	position: relative;
+}
+
+.tooltiptext {
+	visibility: hidden;
+	width: 200px;
+	background-color: white;
+	color: black;
+
+	border-radius: 5px;
+	text-align: center;
+	padding: 5px 0;
+	font-size: .75em;
+
+	position: absolute;
+	z-index: 1;
+	bottom: 120%;
+	left: 25%;
+	margin-left: -100px;
+
+	opacity: 0;
+	transition: opacity 1s;
+	transition-delay: .1s;
+}
+
+.tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: white transparent transparent transparent;
+}
+
+.tooltiptext-middle {
+	visibility: hidden;
+	width: 200px;
+	background-color: white;
+	color: black;
+
+	border-radius: 5px;
+	text-align: center;
+	padding: 5px 0;
+	font-size: .75em;
+
+	position: absolute;
+	z-index: 1;
+	bottom: 120%;
+	left: 50%;
+	margin-left: -100px;
+
+	opacity: 0;
+	transition: opacity 1s;
+	transition-delay: .1s;
+}
+
+.tooltiptext-middle::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: white transparent transparent transparent;
+}
+
+
+.rank:hover .tooltiptext-middle {
+	visibility: visible;
+	opacity: 1;
+}
+
+.rank .tooltiptext-middle:hover {
+	visibility: hidden;
+}
+
+.member:hover .tooltiptext-middle {
+	visibility: visible;
+	opacity: 1;
+}
+
+.member .tooltiptext-middle:hover {
+	visibility: hidden;
+}
+
+.active:hover .tooltiptext-middle {
+	visibility: visible;
+	opacity: 1;
+}
+
+.active .tooltiptext-middle:hover {
+	visibility: hidden;
+} 
+
+.ttpct:hover .tooltiptext {
+	visibility: visible;
+	opacity: 1;
+}
+
+.ttpct .tooltiptext:hover {
+	visibility: hidden;
+}
+
+.record:hover .tooltiptext {
+	visibility: visible;
+	opacity: 1;
+}
+
+.record .tooltiptext:hover {
+	visibility: hidden;
+}
+
+.pct-gain:hover .tooltiptext {
+	visibility: visible;
+	opacity: 1;
+}
+
+.pct-gain .tooltiptext:hover {
+	visibility: hidden;
+}
+
+.money:hover .tooltiptext {
+	visibility: visible;
+	opacity: 1;
+}
+
+.money .tooltiptext:hover {
+	visibility: hidden;
+}
+
+#summary {
+	font-size: 14px;
+}
+
+div#summary {
+	margin-top: 5px;
+	margin-bottom: 0px;
+	margin-left: auto;
+	margin-right: auto;
+	display: flex;
+}
+
+div#summary p.gen-info {
+	margin: 5px;
+}
+
+.flex-container {
+	display: flex;
+	flex-direction: column-reverse;
+}
+
+div#new-take {
+	position: relative;
+}
+
+.highlight {
+	border-bottom: 3px solid #cffafa;
+}
+
+@media only screen and (max-width: 600px) {
+  h1 {
+  	font-size: 25px;
+  }
+
+  a.media-members span.name{
+    text-decoration: underline;
+  }
+
+  #table table#takepct-table {
+  	width: 100%;
+  	font-size: 12px;
+  }
+
+  .member-images {
+  	width: auto;
+  	height: 100%;
+  }
+
+  th.rank {
+  	width: 3%;
+  }
+  th.money {
+  	width: 5%;
+  }
+  th.record {
+  	width: 5%;
+  }
+
+  th {
+  	padding-bottom: 5px;
+  }
+
+  td {
+  	height: 30px;
+  }
+
+  tr {
+  	height: 50px;
+  }
+
+  .record-col {
+  	text-align: center;
+  }
+
+  .member-images {
+  	height: 120%;
+  	width: auto;
+  }
+
+  div#summary {
+  	width: 100%;
+  	font-size: 12px;
+  	display: flex;
+  	flex-direction: space-between;
+  }
+
+  .col-md-6 {
+  	margin: 0;
+  }
+
+  .col-md-6 .bs-select {
+  	font-size: 14px;
+  }
+
+  .col-md-6 .bs-select select {
+  	height: 20px;
+  	font-size: 14px;
+  }
+
+  .col-md-6 #takepct-table_filter {
+  	font-size: 14px;
+  }
+
+  .col-md-6 input {
+  	height: 20px;
+  }
+
+  .col-md-7 {
+  	margin-right: 10px;
+  	font-size: 16px;
+  }
+
+  p.gen-info {
+  	display: flex;
+  	flex-direction: column;
+  }
+
+
+  div#summary span#total-takes, span#overall-record, span#overall-pct, span#overall-gain {
+  	margin: 0 auto;
+  }
+
+  body {
+  	overflow-x: hidden;
+  }
+
+}
+
+
+

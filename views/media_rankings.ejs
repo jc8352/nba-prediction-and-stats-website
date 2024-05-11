@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="/mediarankings.css">
+		<link rel="stylesheet" type="text/css" href="/nav_bar.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<script
+  			src="https://code.jquery.com/jquery-3.6.1.min.js"
+  			integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+  			crossorigin="anonymous"></script>
+  		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  		<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4083353808185208"
+     crossorigin="anonymous"></script>
+		<title>NBA Take Tracker</title>
+	</head>
+	<body>
+
+		<div id="nav-bar">
+			<div id= "top-left">
+				<div id="logo-container"><a href="/"><img src='/basketball.jpeg' id='logo' width=100% height=auto></a></div>
+				<span id="users-tab"><a href="/users">Users</a></span>
+				<span id="stats-tab"><a href="/stats">Stats</a></span>
+				<span id="charts-tab"><a href="/charts">Charts</a></span>
+			</div>
+			<div id="middle"></div>
+			<div id= "top-right">
+				<% if (user) { %>
+				<span id= "logout"><a href="/logout">Logout</a></span>
+				<span id= "logged-in-username"><a href=<%= "/users/" + user.id %>><%= user.username %></a></span>
+				<% } else { %>
+				<span id= "sign-in"><a href="/login">Login</a></span>
+				<% } %>
+				<span id='create-take'><a href="/users/createtake">Create Take</a></span>
+
+				<div class="user-search-cards">
+					<div class="search-wrapper">
+						<i class="fa fa-search"></i>
+						<input type="search" id="search" placeholder="Search Users" data-search>
+					</div>
+					<div class="user-cards" id="user-cards-div" data-user-cards-container>
+						<template data-user-template>
+							<a>
+							<div class="card" data-card>
+								<div class="username" data-username></div>
+							</div>
+							</a>
+						</template>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+	<% function format_pct(pct) {
+		if (pct > 0) {
+			return "↑"+(pct*100).toFixed(1)+"%";
+		}
+		else if (pct < 0) {
+			return "↓"+(pct*-100).toFixed(1)+"%";
+		}
+		else { 
+			return "↓"+(pct*100).toFixed(1)+"%";
+		}
+
+		} %>
+
+		<h1>NBA Media Rankings</h1>
+	<div class="flex-container">
+		<div id="table">
+			<% if (stats != null) { %>
+			<table id="takepct-table">
+			<thead>
+				<tr class='toprow'>
+					<th onclick="sortTable(0, 'asc')" class='rank'>Rank
+					<span class='tooltiptext-middle'>Rank</span>
+					</th>
+					<th onclick="sortTable(1, 'asc')" class='member'>Media Member
+						<span class='tooltiptext-middle'>Media Member</span>
+					</th>
+					<th onclick="sortTable(2, 'desc')" class='active'>A
+						<span class='tooltiptext-middle'>Number of takes that are active</span>
+					</th>
+					<th onclick="sortTable(3, 'desc')" class='ttpct'>TT%
+						<span class='tooltiptext'>True Take Percentage: Percent of takes that come true</span>
+					</th>
+					<th onclick="sortTable(4, 'desc')" class='record'>Record
+						<span class='tooltiptext'>Overall take record</span>
+					</th>
+					<th onclick="sortTable(5, 'desc')" class='pct-gain'>% Gain
+						<span class='tooltiptext'>Percent gain/loss if one were to bet $50 on each take</span>
+					</th>
+					<th onclick="sortTable(6, 'desc')" class='money highlight'>$ Gain
+						<span class='tooltiptext'>Money gained/lost if one were to bet $50 on each take</span>
+					</th>
+				</tr>
+			</thead>
+				<% var gain_str, ttpct %>
+				<% var class_name %>
+				<% var total_right=0 %>
+				<% var total=0 %>
+				<% var total_gain=0 %>
+				<% var total_wrong=0 %>
+				<% var rank=1 %>
+			<tbody>
+				<% stats.forEach(function(item) { %>
+				<% total_right+=item.right; total+=item.total_takes; 
+					total_gain+=item.money_gain; total_wrong+=item.wrong; %>
+				<tr>
+					<td><span class="ranking"><%= rank %>.</span></td>
+					<% rank++ %>
+					<td><a href=<%= "/media/" + item._id %> class='media-members'><img src=<%= "/pfp_images/" + item.pfp %> class='member-images' style="vertical-align:middle" width=auto height=50%><span> </span><span class='name'><%= item.name %></span></a></td>
+					<td class="active-col" style="color:grey"><%= item.total_takes-item.right-item.wrong %></td>
+					<% ttpct = (item.right+item.wrong) > 0 ? (item.right/(item.right+item.wrong)*100) : 0 %>
+					<td><%= ttpct.toFixed(1) %>%</td>
+					<td class="record-col"><%= item.right %>-<%= item.wrong %></td>
+					<% class_name = (item.pct_gain > 0) ? "positive" : ((item.pct_gain==0) ? "zero" : "negative") %>
+					<td class=<%= class_name %>><%= format_pct(item.pct_gain) %></td>
+					<% gain_str = "$0.00" %>
+					<% class_name = "zero" %>
+					<% if (item.money_gain < 0) {
+						gain_str = "-$"+(item.money_gain*-1).toFixed(2)
+						class_name = "negative"}
+						else if (item.money_gain > 0) {
+							gain_str = "$"+(item.money_gain).toFixed(2)
+							class_name = "positive"}%>
+					<td class=<%= class_name %>><%= gain_str %></td>
+				</tr>
+				<% }) %>
+			</tbody>
+			</table>
+			<% } %>
+		</div>
+
+		<div id="summary">
+			<p class="gen-info">Total takes: <span id="total-takes" style="color:orange"><%= total %></span></p>
+			<p class="gen-info">Overall record: <span id="overall-record" style="color: #a142f5"><%= total_right %>-<%= total_wrong %></span></p>
+			<% let overall_ttpct = total_right/(total_wrong+total_right) %>
+			<% class_name = "zero" %>
+			<% if (overall_ttpct < .5) {
+				class_name = "negative"
+				} else if (overall_ttpct > .5) {
+				class_name = "positive"	} %>
+			<p class="gen-info">Overall true take %: <span id="overall-pct" class=<%= class_name %>><%= (overall_ttpct*100).toFixed(1) %>%</span></p>
+			<% overall_gain_str = "$0.00" %>
+			<% class_name = "zero" %>
+			<% if (total_gain < 0) {
+				overall_gain_str = "-$"+(total_gain*-1).toFixed(2)
+				class_name = "negative"}
+				else if (total_gain > 0) {
+					overall_gain_str = "$"+(total_gain).toFixed(2)
+					class_name = "positive"} %>
+			<p class="gen-info">Overall money gain: <span id="overall-gain" class=<%= class_name %>><%= overall_gain_str %></span></p>
+		</div>
+	</div>
+
+		<script type="text/javascript" src= "/mediarankings.js"></script>
+
+
+		<script>
+			//sortTable(3, 'desc');
+			//addRankings();
+		</script>
+
+		<script>
+			$(function() {
+  				var headers = $('table thead tr');
+  				 
+
+  				headers.children().click(function() {
+
+    			headers.children().removeClass('highlight');
+    			 
+    			var index = $(this).prevAll().length;  
+    			headers.find(':nth-child(' + (index + 1) + ')').addClass('highlight');
+    			
+
+  				});
+			});
+		</script>
+
+		<script type="text/javascript" src="/search_bar.js"></script>
+
+
+	</body>
+</html>

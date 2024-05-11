@@ -1,0 +1,6 @@
+unneeded-nbatt/
+*.zip
+.env
+.ebextensions/
+.platform/
+.npmrc

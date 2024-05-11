@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="/stats.css">
+	<link rel="stylesheet" type="text/css" href="/nav_bar.css">
+	<link rel="stylesheet" type="text/css" href="/default_style.css">
+	<link rel="stylesheet" type="text/css" href="/player_stats.css">
+	<link rel="stylesheet" type="text/css" href="/team_stats.css">
+	<link rel="stylesheet" type="text/css" href="/bootstrap-table-style.css">
+	<link rel="stylesheet" type="text/css" href="/box_scores.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script
+  		src="https://code.jquery.com/jquery-3.6.1.min.js"
+  		integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+  		crossorigin="anonymous"></script>
+  	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  	<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4083353808185208"
+     crossorigin="anonymous"></script>
+	<title><%= "Box Score: "+(away[0].toUpperCase()+away.slice(1))+" at "+(home[0].toUpperCase()+home.slice(1)) %></title>
+</head>
+<body>
+	<div id="nav-bar">
+		<div id= "top-left">
+			<div id="logo-container"><a href="/"><img src='/basketball.jpeg' id='logo' width=100% height=auto></a></div>
+			<span id="users-tab"><a href="/users">Users</a></span>
+			<span id="stats-tab"><a href="/stats">Stats</a></span>
+			<span id="charts-tab"><a href="/charts">Charts</a></span>
+		</div>
+		<div id="middle"></div>
+		<div id= "top-right">
+			<% if (user) { %>
+			<span id= "logout"><a href="/logout">Logout</a></span>
+			<span id= "logged-in-username"><a href=<%= "/users/" + user.id %>><%= user.username %></a></span>
+			<% } else { %>
+			<span id= "sign-in"><a href="/login">Login</a></span>
+			<% } %>
+			<span id='create-take'><a href="/users/createtake">Create Take</a></span>
+			
+			<div class="user-search-cards">
+				<div class="search-wrapper">
+					<i class="fa fa-search"></i>
+					<input type="search" id="search" placeholder="Search Users" data-search>
+				</div>
+				<div class="user-cards" id="user-cards-div" data-user-cards-container>
+					<template data-user-template>
+						<a>
+						<div class="card" data-card>
+							<div class="username" data-username></div>
+						</div>
+						</a>
+					</template>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="score">
+		<div id="away-score">
+			
+		</div>
+		<div id="home-score">
+			
+		</div>
+	</div>
+
+	<div id="away">
+		<table id="away-table">
+			<thead>
+				<th class="name">Player</th>
+				<th>Mins</th>
+				<th>FGM</th>
+				<th>FGA</th>
+				<th>FG%</th>
+				<th>3PM</th>
+				<th>3PA</th>
+				<th>3P%</th>
+				<th>FTM</th>
+				<th>FTA</th>
+				<th>FT%</th>
+				<th>OREB</th>
+				<th>DREB</th>
+				<th>REB</th>
+				<th>AST</th>
+				<th>STL</th>
+				<th>BLK</th>
+				<th>TO</th>
+				<th>PF</th>
+				<th>T</th>
+				<th>PTS</th>
+				<th>+/-</th>
+				<th>On/Off</th>
+			</thead>
+			<tbody id="away-players">
+				
+			</tbody>
+		</table>
+	</div>
+
+	<div id="home">
+		<table id="home-table">
+			<thead>
+				<th class="name">Player</th>
+				<th>Mins</th>
+				<th>FGM</th>
+				<th>FGA</th>
+				<th>FG%</th>
+				<th>3PM</th>
+				<th>3PA</th>
+				<th>3P%</th>
+				<th>FTM</th>
+				<th>FTA</th>
+				<th>FT%</th>
+				<th>OREB</th>
+				<th>DREB</th>
+				<th>REB</th>
+				<th>AST</th>
+				<th>STL</th>
+				<th>BLK</th>
+				<th>TO</th>
+				<th>PF</th>
+				<th>T</th>
+				<th>PTS</th>
+				<th>+/-</th>
+				<th>On/Off</th>
+			</thead>
+			<tbody id="home-players">
+				
+			</tbody>
+		</table>
+	</div>
+
+	<script type="text/javascript" src="/search_bar.js"></script>
+
+	<script type="text/javascript">
+		function redirectPlayer(event) {
+			fetch('/api/stats/players/findid/'+event.target.innerHTML.split(" ").join("1"))
+			.then(res => res.json())
+			.then(player => {
+				if (player == null) {
+					alert(event.target.innerHTML+ " hasn't played this year");
+				}
+				else {
+					window.location.href = '/stats/players/'+player._id;
+				}
+			})
+		}
+	</script>
+
+	<script type="text/javascript">
+		function getOnOff(player, team) {
+		const GAME_LENGTH = 48;
+		//console.log(player);
+		if (player.mins == 0 && player.secs == 0) {return 0;}
+		let total_off_court = team.point_differential-player.plus_minus;
+		let total_mins_off = (GAME_LENGTH+team.overtimes*5)-(player.mins+player.secs/60);
+		//console.log("off court: " + total_off_court);
+		//console.log("mins off: " + total_mins_off);
+		//console.log("on court: " + player.plus_minus);
+		//console.log("mins on: " + (player.mins+player.secs/60));
+
+		let per48_off = total_off_court*(GAME_LENGTH/total_mins_off);
+		let per48_on = player.plus_minus*(GAME_LENGTH/(player.mins+player.secs/60));
+
+		//console.log("per48_off: " + per48_off);
+		//console.log("per48_on: " + per48_on);
+		return (per48_on-per48_off);
+
+	}
+	</script>
+
+	<script type="text/javascript">
+		//console.log(window.location.pathname.split("/"));
+		let path = window.location.pathname.split("/");
+		fetch('/api/stats/boxscores/'+path[3]+"/"+path[4]+"/"+path[5])
+		.then(res => res.json())
+		.then(teams => {
+			//console.log(teams);
+			for (i = 0; i < 2; i++) {
+				let temp = "";
+				let score = "";
+				if (teams[i].box_scores[0].location == "A") {
+					score = "<div>"+"<a href="+'/stats/teams/'+teams[i].team.split(" ").join("").toLowerCase()+">"+"<span class='team-name'>"+teams[i].team+"</span>"+"</a>"+"<span class='team-score'>"+teams[i].box_scores[0].points+"</span>"+"</div";
+					document.getElementById("away-score").innerHTML = score;
+
+				}
+				else {
+					score = "<div>"+"<span class='team-score'>"+teams[i].box_scores[0].points+"</span>"+"<a href="+'/stats/teams/'+teams[i].team.split(" ").join("").toLowerCase()+">"+"<span class='team-name'>"+teams[i].team+"</span>"+"</a>"+"</div";
+					document.getElementById("home-score").innerHTML = score;
+				}
+				let players = teams[i].box_scores[0].players;
+				for (j = 0; j < players.length; j++) {
+					temp += "<tr>"
+					temp += "<td class='td-name' onclick='redirectPlayer(event)'>"+players[j].name+"</td>";
+					let secs = (players[j].secs<10) ? ("0"+players[j].secs):players[j].secs;
+					temp += "<td>"+players[j].mins+":"+secs+"</td>";
+					temp += "<td>"+players[j].fgm+"</td>";
+					temp += "<td>"+players[j].fga+"</td>";
+					temp += "<td>"+(players[j].fgm/players[j].fga*100).toFixed(1)+"</td>";
+					temp += "<td>"+players[j].tpm+"</td>";
+					temp += "<td>"+players[j].tpa+"</td>";
+					temp += "<td>"+(players[j].tpm/players[j].tpa*100).toFixed(1)+"</td>";
+					temp += "<td>"+players[j].ftm+"</td>";
+					temp += "<td>"+players[j].fta+"</td>";
+					temp += "<td>"+(players[j].ftm/players[j].fta*100).toFixed(1)+"</td>";
+					temp += "<td>"+players[j].oreb+"</td>";
+					temp += "<td>"+players[j].dreb+"</td>";
+					temp += "<td>"+players[j].rebounds+"</td>";
+					temp += "<td>"+players[j].assists+"</td>";
+					temp += "<td>"+players[j].steals+"</td>";
+					temp += "<td>"+players[j].blocks+"</td>";
+					temp += "<td>"+players[j].turnovers+"</td>";
+					temp += "<td>"+players[j].fouls+"</td>";
+					temp += "<td>"+players[j].technicals+"</td>";
+					temp += "<td>"+players[j].points+"</td>";
+					let pm_class = players[j].plus_minus>0 ? "positive":(players[j].plus_minus==0) ? "grey":"negative";
+					let pm_str = players[j].plus_minus>0 ? "+"+players[j].plus_minus:players[j].plus_minus;
+					temp += "<td class="+pm_class+">"+pm_str+"</td>";
+					let indOnOff = getOnOff(players[j], teams[i].box_scores[0]);
+					let onOff_class = indOnOff>0 ? "positive":(indOnOff==0) ? "grey":"negative";
+					indOnOff = indOnOff>0 ? "+"+indOnOff.toFixed(1):indOnOff.toFixed(1);
+					temp += "<td class="+onOff_class+">"+indOnOff+"</td>";
+					temp += "</tr>"
+				}
+				temp += "<tr class='avg-row'>";
+				temp += "<td>"+"Team"+"</td>";
+				temp += "<td>"+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].fgm+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].fga+"</td>";
+				temp += "<td>"+(teams[i].box_scores[0].fgm/teams[i].box_scores[0].fga*100).toFixed(1)+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].tpm+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].tpa+"</td>";
+				temp += "<td>"+(teams[i].box_scores[0].tpm/teams[i].box_scores[0].tpa*100).toFixed(1)+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].ftm+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].fta+"</td>";
+				temp += "<td>"+(teams[i].box_scores[0].ftm/teams[i].box_scores[0].fta*100).toFixed(1)+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].oreb+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].dreb+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].rebounds+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].assists+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].steals+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].blocks+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].turnovers+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].fouls+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].techincals+"</td>";
+				temp += "<td>"+teams[i].box_scores[0].points+"</td>";
+				let pm_class = teams[i].box_scores[0].point_differential>0 ? "positive":(teams[i].box_scores[0].point_differential==0) ? "grey":"negative";
+				let pm_str = teams[i].box_scores[0].point_differential>0 ? "+"+teams[i].box_scores[0].point_differential:teams[i].box_scores[0].point_differential;
+				temp += "<td class="+pm_class+">"+pm_str+"</td>";
+				temp += "<td>"+"0"+"</td>";
+				temp += "</tr>";
+				if (teams[i].box_scores[0].location == "A") {
+					document.getElementById("away-players").innerHTML = temp;
+				}
+				else {
+					document.getElementById("home-players").innerHTML = temp;
+				}
+			}
+		});
+	</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+div#away, div#home {
+	width: 80%;
+	margin: 0 auto;
+}
+
+table#away-table, table#home-table {
+	width: 100%;
+	font-size: 15px;
+	border-collapse: collapse;
+	margin-top: 30px;
+	margin-bottom: 30px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+th {
+	font-size: 14px;
+}
+
+th.name {
+	width: 20%;
+}
+
+td.td-name {
+	color: #add9f0;
+	padding-left: 5px;
+	text-align: left;
+}
+
+td.td-name:hover {
+	cursor: pointer;
+}
+
+tr.avg-row {
+	/*background-color: #325d63;*/
+	/*background-color: #395061;*/
+	background-color: #252324;
+}
+
+div#score {
+	width: 50%;
+	margin: 0 auto;
+	display: flex;
+}
+
+
+div#away-score, div#home-score {
+	margin: 20px;
+	font-size: 30px;
+	width: 50%;
+}
+
+div#away-score {
+	text-align: right;
+}
+
+div#home-score {
+	text-align: left;
+}
+
+div#score div span {
+	margin: 10px;
+}
+
+div#score div span.team-name {
+	color: #add9f0;
+}
+
+@media only screen and (max-width: 600px) {
+
+	div#score {
+		width: 100%;
+	}
+
+	div#away, div#home {
+		width: 100%;
+		margin: 0 auto;
+		overflow-x: scroll;
+	}
+
+
+	div#away-score, div#home-score {
+		margin: 5px;
+		font-size: 20px;
+	}
+
+	div#score div span {
+		margin: 5px;
+	}
+
+}
+
+
+
